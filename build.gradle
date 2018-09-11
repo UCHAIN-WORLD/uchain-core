@@ -1,0 +1,75 @@
+group 'uchain'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+configurations.all {
+    exclude group: 'ch.qos.logback'
+    exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+configurations {
+    runtime.exclude group: "'ch.qos.logback'"
+    runtime.exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
+
+
+    dependencies {
+
+        compile "org.slf4j:slf4j-api:1.8.0-beta1"
+	    compile "org.slf4j:slf4j-log4j12:1.8.0-beta1"
+	    compile "log4j:log4j:1.2.17"
+        compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.59'
+
+
+        testCompile group: 'junit', name: 'junit', version: '4.12'
+
+        compile group: 'org.projectlombok', name: 'lombok', version: '1.18.2'
+        compile "org.bitlet:weupnp:0.1.4"
+        compile "com.typesafe.akka:akka-actor_2.12:2.5.12"
+	    compile "com.typesafe.akka:akka-http-core_2.12:10.1.0"
+	    compile "ch.megard:akka-http-cors_2.12:0.2.2"
+	    compile group: 'de.heikoseeberger', name: 'akka-http-circe_2.12', version: '1.21.0'
+	    compile group: 'org.projectlombok', name: 'lombok', version: '1.18.0'
+	    
+	    compile group: 'org.iq80.leveldb', name: 'leveldb', version: '0.10'
+        compile group: 'org.iq80.leveldb', name: 'leveldb-api', version: '0.10'
+        compile group: 'org.fusesource.leveldbjni', name: 'leveldbjni-all', version: '1.8'
+        compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.1'
+        compile 'net.sf.json-lib:json-lib:2.4:jdk15' 
+    }
+
+}
+
+
+jar {
+    String someString = ''
+    configurations.runtime.each {someString = someString + " lib\\"+it.name}
+
+    manifest {
+        attributes 'Main-Class': 'com.uchain.Main'
+        attributes 'Class-Path': someString
+    }
+}
+
+task run(type: JavaExec, dependsOn: classes) {
+    main = 'Main'
+    classpath sourceSets.main.runtimeClasspath
+    classpath configurations.runtime
+}
+
+task copyJar(type: Copy){
+    from configurations.runtime
+    into ('build/libs/lib')
+}
+
+task release(type: Copy,dependsOn: [build,copyJar]) {
+    from  'conf'
+    into ('build/libs/conf')
+}
