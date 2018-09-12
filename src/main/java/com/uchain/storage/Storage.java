@@ -1,6 +1,7 @@
 package com.uchain.storage;
 
-import java.util.Map;
+import java.util.List;
+import java.util.Map.Entry;
 
 public interface Storage<Key, Value> {
 	boolean set(byte[] key, byte[] value);
@@ -9,7 +10,7 @@ public interface Storage<Key, Value> {
 	
 	void delete(byte[] key);
 	
-	void scan();
+	List<Entry<byte[], byte[]>> scan();
 	//
 	// def find(prefix: Array[Byte], func: (Key, Value) => Unit): Unit
 	//

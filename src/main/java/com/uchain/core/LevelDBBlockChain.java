@@ -5,6 +5,7 @@ import com.uchain.core.datastore.keyvalue.*;
 import com.uchain.crypto.*;
 import com.uchain.main.ChainSettings;
 import com.uchain.main.ConsensusSettings;
+import com.uchain.main.Settings;
 import com.uchain.storage.ConnFacory;
 import com.uchain.storage.LevelDbStorage;
 import lombok.Getter;
@@ -21,46 +22,58 @@ import java.util.Map;
 @Setter
 public class LevelDBBlockChain implements BlockChain{
 
-        private ChainSettings settings;
+        private static Settings settings = new Settings("config2");
 
         private ConsensusSettings consensusSettings;
 
-        LevelDBBlockChain(ChainSettings chainSettings, ConsensusSettings consensusSettings){
-            this.settings = chainSettings;
+        public LevelDbStorage db = ConnFacory.getInstance(settings.getChainSettings().getChain_dbDir());
+
+        LevelDBBlockChain(ConsensusSettings consensusSettings){
             this.consensusSettings = consensusSettings;
+            HeadBlock headBlockStore = headBlkStore.get();
+            if(headBlockStore == null) reInit();
+            else init(headBlockStore);
         }
 
-        public LevelDbStorage db = ConnFacory.getInstance(settings.getChain_dbDir());
+//        public LevelDbStorage db = ConnFacory.getInstance(settings.getChain_dbDir());
 
 
-        private BinaryData genesisProducer = new BinaryData(settings.getChain_genesis_publicKey()); // TODO: read from settings
-        private PrivateKey genesisProducerPrivKey = new PrivateKey(Scalar.apply(new BinaryData(settings.getChain_genesis_privateKey())));
+        private BinaryData genesisProducer = new BinaryData(settings.getChainSettings().getChain_genesis_publicKey()); // TODO: read from settings
+        private PrivateKey genesisProducerPrivKey = new PrivateKey(Scalar.apply(new BinaryData(settings.getChainSettings().getChain_genesis_privateKey())));
 
-        private HeaderStore headerStore = new HeaderStore(db, 10, DataStoreConstant.HeaderPrefix, new UInt256Key(), new BlockHeaderValue());
-        private HeightStore heightStore = new HeightStore(db, 10, DataStoreConstant.HeightToIdIndexPrefix, new IntKey(), new UInt256Value());
-        private TransactionStore txStore = new TransactionStore(db, 10, DataStoreConstant.TxPrefix, new UInt256Key(), new TransactionValue());
-        private AccountStore accountStore = new AccountStore(db, 10, DataStoreConstant.AccountPrefix, new UInt160Key(), new AccountValue());
+        private HeaderStore headerStore = new HeaderStore(db, 10, DataStoreConstant.HeaderPrefix,
+                new UInt256Key(), new BlockHeaderValue());
+        private HeightStore heightStore = new HeightStore(db, 10, DataStoreConstant.HeightToIdIndexPrefix,
+                new IntKey(), new UInt256Value());
+        private TransactionStore txStore = new TransactionStore(db, 10, DataStoreConstant.TxPrefix,
+                new UInt256Key(), new TransactionValue());
+        private AccountStore accountStore = new AccountStore(db, 10, DataStoreConstant.AccountPrefix,
+                new UInt160Key(), new AccountValue());
         //  private val addressStore = new AddressStore(db)
-        private BlkTxMappingStore blkTxMappingStore = new BlkTxMappingStore(db, 10, DataStoreConstant.BlockIdToTxIdIndexPrefix, new UInt256Key(), new BlkTxMappingValue());
+        private BlkTxMappingStore blkTxMappingStore = new BlkTxMappingStore(db, 10,
+                DataStoreConstant.BlockIdToTxIdIndexPrefix, new UInt256Key(), new BlkTxMappingValue());
 
-        private HeadBlockStore headBlkStore = new HeadBlockStore(db, DataStoreConstant.HeadBlockStatePrefix,new HeadBlockValue());
+        private HeadBlockStore headBlkStore = new HeadBlockStore(db, DataStoreConstant.HeadBlockStatePrefix,
+                new HeadBlockValue());
         //private val utxoStore = new UTXOStore(db, 10)
-        private NameToAccountStore nameToAccountStore = new NameToAccountStore(db, 10, DataStoreConstant.NameToAccountIndexPrefix,new StringKey(),new UInt160Key());
+        private NameToAccountStore nameToAccountStore = new NameToAccountStore(db, 10,
+                DataStoreConstant.NameToAccountIndexPrefix,new StringKey(),new UInt160Key());
         // TODO:  pubkeyNonceStore
-        private ProducerStateStore prodStateStore = new ProducerStateStore(db,  DataStoreConstant.ProducerStatePrefix, new ProducerStatusValue());
+        private ProducerStateStore prodStateStore = new ProducerStateStore(db,  DataStoreConstant.ProducerStatePrefix,
+                new ProducerStatusValue());
 
 
         // TODO: folkBase is todo
         // TODO: zero is not a valid pub key, need to work out other method
-        private BinaryData minerCoinFrom = new BinaryData(settings.getChain_miner());   // 33 bytes pub key
+        private BinaryData minerCoinFrom = new BinaryData(settings.getChainSettings().getChain_miner());   // 33 bytes pub key
         private Fixed8 minerAward = Fixed8.Ten;
 
         private UInt160 genesisMinerAddress = UInt160.parse("f54a5851e9372b87810a8e60cdd2e7cfd80b6e31");
         private Transaction genesisTx = new Transaction(TransactionType.Miner, minerCoinFrom,
-                genesisMinerAddress, "", minerAward, UInt256Util.Zero(), 0L, CryptoUtil.array2binaryData(BinaryData.empty),
-                CryptoUtil.array2binaryData(BinaryData.empty));
+                genesisMinerAddress, "", minerAward, UInt256Util.Zero(), 0L,
+                CryptoUtil.array2binaryData(BinaryData.empty),CryptoUtil.array2binaryData(BinaryData.empty));
 
-        private BlockHeader genesisBlockHeader =  BlockHeader.build(0, settings.getChain_genesis_timeStamp(),
+        private BlockHeader genesisBlockHeader =  BlockHeader.build(0, settings.getChainSettings().getChain_genesis_timeStamp(),
                 UInt256Util.Zero(), UInt256Util.Zero(), genesisProducer, genesisProducerPrivKey);
 
         private Block genesisBlock = new Block(genesisBlockHeader,Transaction.transactionToArrayList(genesisTx));
@@ -69,9 +82,6 @@ public class LevelDBBlockChain implements BlockChain{
 
         private ProducerStatus latestProdState = null;
 
-        static {
-
-        }
         private BlockHeader initDB(WriteBatch batch){
             BlkTxMapping blkTxMapping = new BlkTxMapping(genesisBlock.id(), genesisBlock.getTransactionIds());
             blkTxMappingStore.set(genesisBlock.id(), blkTxMapping, batch);
@@ -87,7 +97,6 @@ public class LevelDBBlockChain implements BlockChain{
             heightStore.foreachForDelete(batch);
             blkTxMappingStore.foreachForDelete(batch);
             accountStore.foreachForDelete(batch);
-            //utxoStore.foreach((k, _) => utxoStore.delete(k, batch))
             nameToAccountStore.foreachForDelete(batch);
             prodStateStore.delete(batch);
             headBlkStore.delete(batch);
@@ -191,13 +200,12 @@ public class LevelDBBlockChain implements BlockChain{
             return headerStore.contains(id);
         }
 
-        private boolean saveBlockToStores(Block block){
+        public boolean saveBlockToStores(Block block){
             try {
-                val batch = db.db.createWriteBatch();
+            	WriteBatch batch = db.getBatchWrite();
                 headerStore.set(block.getHeader().id(), block.getHeader(), batch);
                 heightStore.set(block.getHeader().getIndex(), block.getHeader().id(), batch);
                 headBlkStore.set(new HeadBlock(block.getHeader().getIndex(), block.getHeader().id()), batch);
-                //prodStateStore.set(latestProdState, batch)
                 val transations = new ArrayList<UInt256>(block.getTransactions().size());
                 block.getTransactions().forEach(transaction -> {transations.add(transaction.id());});
                 val blkTxMapping = new BlkTxMapping(block.id(), transations);
@@ -225,7 +233,7 @@ public class LevelDBBlockChain implements BlockChain{
                 });
                 // TODO accounts.foreach()
                 latestHeader = block.getHeader();
-                db.db.write(batch);
+                db.BatchWrite(batch);
                 return true;
             } catch (Throwable throwable) {
                 throwable.printStackTrace();
@@ -294,8 +302,7 @@ public class LevelDBBlockChain implements BlockChain{
                     CryptoUtil.array2binaryData(BinaryData.empty), CryptoUtil.array2binaryData(BinaryData.empty));
             val txs = getUpdateTransaction(minerTx, transactions);
             val merkleRoot = MerkleTree.root(getUpdateTransactionIds(txs));
-            val header = BlockHeader.build(
-                    latestHeader.getIndex() + 1, timeStamp, merkleRoot,
+            val header = BlockHeader.build(latestHeader.getIndex() + 1, timeStamp, merkleRoot,
                     latestHeader.id(), producer.toBin(), privateKey);
             val block = new Block(header, txs);
 

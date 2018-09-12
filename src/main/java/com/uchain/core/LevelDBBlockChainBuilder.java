@@ -2,18 +2,21 @@ package com.uchain.core;
 
 import com.uchain.main.ChainSettings;
 import com.uchain.main.ConsensusSettings;
+import com.uchain.main.Settings;
 
 public class LevelDBBlockChainBuilder {
 
     static LevelDBBlockChain chain = null;
 
-    static LevelDBBlockChain populate(ChainSettings chainSettings, ConsensusSettings consensusSettings){
-        LevelDBBlockChain populateChain = new LevelDBBlockChain(chainSettings, consensusSettings);
+    public static LevelDBBlockChain populate(ConsensusSettings consensusSettings){
+        LevelDBBlockChain populateChain = new LevelDBBlockChain(consensusSettings);
         chain = populateChain;
         return populateChain;
     }
 
-    static LevelDBBlockChain getLevelDBBlockchain() {
+
+
+    public static LevelDBBlockChain getLevelDBBlockchain() {
         return chain;
     }
 }

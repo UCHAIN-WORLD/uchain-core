@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 abstract class StoreBase<K, V> {
 
@@ -114,14 +115,16 @@ public void foreachForDelete(WriteBatch batch){
    
     @SuppressWarnings("unchecked")
     public byte[] genKey(K key) {
-//		byte[] bt2 = keyConverter.toBytes(key);
-//    	int bt1Length = prefixBytes.length;
-//    	int bt2Length = keyConverter.toBytes(key).length;
-//    	byte[] bt3 = new byte[bt1Length+bt2Length];  
-//        System.arraycopy(prefixBytes, 0, bt3, 0, bt1Length);  
-//        System.arraycopy(bt2, 0, bt3, bt1Length, bt2Length);  
-//        return bt3;  
-    	return null;
+		byte[] keyBytes = keyConverter.toBytes(key);
+		byte[] keyBytesAddPrefix =  new byte[prefixBytes.length + keyBytes.length];
+		for(int i = 0; i < prefixBytes.length; i++){
+			keyBytesAddPrefix[i] = prefixBytes[i];
+		}
+
+		for(int j = 0; j < keyBytes.length; j++){
+			keyBytesAddPrefix[prefixBytes.length + j] = keyBytes[j];
+		}
+		return keyBytesAddPrefix;
     }
 
     public V getFromBackStore(K key) {
@@ -135,13 +138,13 @@ public void foreachForDelete(WriteBatch batch){
     }
     
     public boolean setBackStore(K key,V value,WriteBatch batch) {
-//    	if (batch != null) {
-//  	      batch.put(genKey(key), valConverter.toBytes(value));
-//  	      return true;
-//  	    } else {
-//  	      return db.set(genKey(key), valConverter.toBytes(value));
-//  	    }
-    	return false;
+		if(batch != null){
+			batch.put(genKey(key), valConverter.toBytes(value));
+			return true;
+		}
+		else {
+			return db.set(genKey(key), valConverter.toBytes(value));
+		}
     }
    
     public void deleteBackStore(K key,WriteBatch batch) {

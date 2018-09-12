@@ -2,6 +2,7 @@ package com.uchain.main;
 
 import java.io.IOException;
 
+import com.uchain.core.LevelDBBlockChainBuilder;
 import com.uchain.network.NetworkManager;
 import com.uchain.network.peer.PeerHandlerManager;
 import com.uchain.network.upnp.UPnP;
@@ -13,6 +14,8 @@ public class MainApp {
 	public static void main(String[] args) throws IOException {
 		Settings settings = new Settings("config2");
 //		UPnP upnp = new UPnP(settings);
+
+		LevelDBBlockChainBuilder.populate(settings.getConsensusSettings());
 		
 		ActorSystem peerHandlerManagerSystem = ActorSystem.create("peerHandlerManagerSystem");
 		ActorRef peerHandlerActor = peerHandlerManagerSystem.actorOf(PeerHandlerManager.props(settings), "peerHandlerManager");

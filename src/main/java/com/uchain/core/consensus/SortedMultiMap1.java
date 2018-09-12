@@ -47,7 +47,7 @@ public class SortedMultiMap1<K, V> {
 		return container.remove(k);
 	}
 
-	public Map<K, V> head() {
+	public TwoTuple<K, V> head() {
 		return iterator().next();
 	}
 

@@ -5,10 +5,12 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import com.uchain.crypto.UInt256;
 import com.uchain.common.Serializable;
 import com.uchain.common.Serializabler;
-import com.uchain.crypto.*;
+import com.uchain.core.BlockHeader;
+import com.uchain.crypto.UInt256;
+import com.uchain.crypto.UInt256Util;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -43,5 +45,9 @@ public class HeadBlock implements Serializable{
 			e.printStackTrace();
 		}
 		Serializabler.write(os, id);	
+	}
+	
+	public static HeadBlock fromHeader(BlockHeader header) {
+		return new HeadBlock(header.getIndex(), header.id());
 	}
 }

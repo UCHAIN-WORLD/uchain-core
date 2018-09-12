@@ -43,26 +43,26 @@ public class TreeMapTest {
 //		   System.out.println("在Map集合中不包含键名" + key);
 //		  }
 		
-		List<Integer> nums = new ArrayList<Integer>();
-		nums.add(3);
-		nums.add(5);
-		nums.add(1);
-		nums.add(0);
-		System.out.println(nums);
-		Collections.sort(nums);
-		Collections.sort(nums,new Comparator<Integer>() {
-			public int compare(Integer o1, Integer o2) {  
-                //按照金额大小进行降序排列  
-                if(o1.intValue() < o2.intValue()){  
-                    return 1;  
-                }  
-                if(o1.intValue() == o2.intValue()){  
-                    return 0;  
-                }  
-                return -1;  
-            }  
-		});
-		System.out.println(nums);
+//		List<Integer> nums = new ArrayList<Integer>();
+//		nums.add(3);
+//		nums.add(5);
+//		nums.add(1);
+//		nums.add(0);
+//		System.out.println(nums);
+//		Collections.sort(nums);
+//		Collections.sort(nums,new Comparator<Integer>() {
+//			public int compare(Integer o1, Integer o2) {  
+//                //按照金额大小进行降序排列  
+//                if(o1.intValue() < o2.intValue()){  
+//                    return 1;  
+//                }  
+//                if(o1.intValue() == o2.intValue()){  
+//                    return 0;  
+//                }  
+//                return -1;  
+//            }  
+//		});
+//		System.out.println(nums);
 
 	}
 }

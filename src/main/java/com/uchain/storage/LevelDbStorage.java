@@ -1,18 +1,16 @@
 package com.uchain.storage;
 
-import com.google.common.collect.Maps;
-import lombok.val;
-import org.iq80.leveldb.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map.Entry;
+
+import org.iq80.leveldb.DB;
+import org.iq80.leveldb.DBIterator;
+import org.iq80.leveldb.ReadOptions;
+import org.iq80.leveldb.WriteBatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.Array;
-import scala.Byte;
-import org.fusesource.leveldbjni.JniDBFactory;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
-import java.util.Map.Entry;
 
 public class LevelDbStorage implements Storage<byte[], byte[]> {
 	private static final Logger log = LoggerFactory.getLogger(LevelDbStorage.class);
@@ -87,13 +85,41 @@ public class LevelDbStorage implements Storage<byte[], byte[]> {
 		}
 	}
 
+	public WriteBatch getBatchWrite() {
+		WriteBatch batch = db.createWriteBatch();
+//		try {
+//			db.write(batch);
+//		}finally {
+//		      try {
+//				batch.close();
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//		}
+		return batch;
+	}
+	
+	public void BatchWrite(WriteBatch batch) {
+		try {
+			db.write(batch);
+		}finally {
+		      try {
+				batch.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
 	@Override
-	public void scan() {
+	public List<Entry<byte[], byte[]>> scan() {
 		DBIterator iterator = db.iterator();
+		List<Entry<byte[], byte[]>> list = new ArrayList<Entry<byte[], byte[]>>();
 		try {
 			iterator.seekToFirst();
 			while (iterator.hasNext()) {
-				Entry<byte[], byte[]> result = iterator.next();
+				list.add(iterator.peekNext());
+				iterator.next();
 			}
 		}
 		catch (Exception e) {
@@ -105,6 +131,7 @@ public class LevelDbStorage implements Storage<byte[], byte[]> {
 				e.printStackTrace();
 			}
 		}
+		return list;
 	}
 
 	public void foreach(){

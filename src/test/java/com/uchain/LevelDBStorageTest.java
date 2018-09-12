@@ -2,7 +2,8 @@ package com.uchain;
 
 import java.util.Map;
 
-import org.junit.Test;
+import com.uchain.storage.LevelDbStorage;
+import org.junit.*;
 
 import com.google.common.collect.Maps;
 import com.uchain.storage.ConnFacory;
@@ -10,65 +11,79 @@ import com.uchain.storage.ConnFacory;
 import lombok.val;
 
 public class LevelDBStorageTest {
-	@Test
-	public void testSet() {
-		val storage = ConnFacory.getInstance("test_db");
-		assert (true == storage.set("testSet".getBytes(), "testSetValue".getBytes()));
+
+	private static LevelDbStorage storage;
+
+	@BeforeClass
+	public static void setUp(){
+		storage = ConnFacory.getInstance("\\.\\test_db");
+	}
+
+	@AfterClass
+	public static void tearDown(){
 		storage.close();
 	}
 
 	@Test
-	public void testGet() {
-		val key = "testGet".getBytes();
-		val valueString = "testGetValue".getBytes();
-		val storage = ConnFacory.getInstance("test_db");
-		assert (true == storage.set(key, valueString));
-		val value = storage.get(key);
-		assert (value != null);
-		assert (new String(value).equals(new String(valueString)));
-		storage.close();
+	public void testSet(){
+		try {
+			assert (storage.set("testSet".getBytes(), "testSetValue".getBytes()));
+		}catch (Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	@Test
-	public void testUpdate() {
-		val key = "testUpdate".getBytes();
-		val valueString = "testUpdateValue";
-		val newValueString = "testUpdateValueNew";
-		val storage = ConnFacory.getInstance("test_db");
-		assert (true == storage.set(key, valueString.getBytes()));
-		val value = storage.get(key);
-		assert (value != null);
-		assert (new String(value).equals(valueString));
-		assert (true == storage.set(key, newValueString.getBytes()));
-		val newValue = storage.get(key);
-		assert (newValue != null);
-		assert (new String(newValue).equals(newValueString));
-		storage.close();
+	public void testGet(){
+		try {
+			val key = "testGet".getBytes();
+			val valueString = "testGetValue".getBytes();
+			assert (storage.set(key, valueString));
+			val value = storage.get(key);
+			assert (value != null);
+			assert (new String(value).equals(new String(valueString)));
+		}catch (Exception e){
+			e.printStackTrace();
+		}
 	}
 
 	@Test
-	public void testGetKeyNotExists() {
-		val storage = ConnFacory.getInstance("test_db");
+	public void testUpdate(){
+		try {
+			val key = "testUpdate".getBytes();
+			val valueString = "testUpdateValue";
+			val newValueString = "testUpdateValueNew";
+			assert (storage.set(key, valueString.getBytes()));
+			val value = storage.get(key);
+			assert (value != null);
+			assert (new String(value).equals(valueString));
+			assert (storage.set(key, newValueString.getBytes()));
+			val newValue = storage.get(key);
+			assert (newValue != null);
+			assert (new String(newValue).equals(newValueString));
+		}catch (Exception e){
+			e.printStackTrace();
+		}
+	}
+
+	@Test
+	public void testGetKeyNotExists(){
 		val value = storage.get("testNotExistKey".getBytes());
 		assert (value == null);
-		storage.close();
 	}
 
 	@Test
-	public void testDelete() {
+	public void testDelete(){
 		val key = "testDelete".getBytes();
 		val value = "testDeleteValue".getBytes();
-		val storage = ConnFacory.getInstance("test_db");
-		assert (true == storage.set(key, value));
+		assert (storage.set(key, value));
 		assert (storage.get(key) != null);
 		storage.delete(key);
 		assert (storage.get(key) == null);
-		storage.close();
 	}
 	
 	@Test
-	public void  testScan() {
-	    val storage = ConnFacory.getInstance("scan_test_db_1");
+	public void  testScan(){
 		Map<String, String> linkedHashMap = Maps.newLinkedHashMap();
 	    for (int i = 1; i <= 10; i++) {
 	    	val key = "key"+i;
@@ -78,14 +93,5 @@ public class LevelDBStorageTest {
 		        assert(storage.set(key.getBytes(), value.getBytes()));
 		    }
 		}
-
-	    int i = 0;
-//	    Map<String, String> resultLinkedHashMap = storage.scan();
-//	    for (Map.Entry<String, String> entry : resultLinkedHashMap.entrySet()) {
-//	    	linkedHashMap.get(entry.getKey()).equals(entry.getValue());
-//            i++;
-//        }
-	    assert(i == 10);
-	    storage.close();
 	  }
 }

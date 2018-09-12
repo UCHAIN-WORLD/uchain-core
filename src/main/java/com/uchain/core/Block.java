@@ -40,7 +40,11 @@ public class Block implements Identifier<UInt160>{
     public int height(){
         return header.getIndex();
     }
-
+    
+    public UInt256 prev() {
+    	return header.getPrevBlock();
+    }
+    
     public long timeStamp(){
         return header.getTimeStamp();
     }

@@ -27,13 +27,17 @@ public class SortedMultiMap2Iterator<K1,K2,V> implements Iterator<Object>{
 	}
 	
 	@Override
-	public Map<K1,Map<K2, V>> next() {
+	public ThreeTuple<K1,K2,V> next() {
 		if(!hasNext())
 			throw new NoSuchElementException();
-		Map<K2, V> next = it2.next();
-		Map<K1,Map<K2, V>> map = new HashMap<K1,Map<K2, V>>();
-		map.put(k, next);
-		return map;
+//		Map<K2, V> next = it2.next();
+//		System.out.println(next.size());
+//		Map<K1,Map<K2, V>> map = new HashMap<K1,Map<K2, V>>();
+//		map.put(k, next);
+//		return map;
+		TwoTuple<K2, V> twoTuple = it2.next();
+		ThreeTuple<K1,K2,V> threeTuple = new ThreeTuple<K1,K2,V>(k, twoTuple.first, twoTuple.second);
+		return threeTuple;
 	}
 
 	private void nextIt() {

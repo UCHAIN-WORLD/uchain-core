@@ -2,6 +2,7 @@ package com.uchain.crypto;
 
 import java.util.List;
 
+import lombok.val;
 import org.bouncycastle.util.encoders.Hex;
 
 import lombok.Getter;
@@ -15,7 +16,8 @@ public class BinaryData/* implements Serializable*/ {
 
     public static byte[] empty = new byte[0];
     public BinaryData(String hex) {
-        this.data = CryptoUtil.byteToList(Hex.decode(hex));
+        val decodeData = Hex.decode(hex);
+        this.data = CryptoUtil.byteToList(decodeData);
     }
     public BinaryData(List<Byte> data) {
         this.data = data;
@@ -31,8 +33,8 @@ public class BinaryData/* implements Serializable*/ {
         return length;
     }
 
-    @Override
-    public String toString() {
-        return Hex.toHexString(CryptoUtil.listTobyte(getData()));
-    }
+//    @Override
+//    public String toString() {
+//        return Hex.toHexString(CryptoUtil.listTobyte(getData()));
+//    }
 }

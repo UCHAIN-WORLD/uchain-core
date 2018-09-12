@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class SortedMultiMap2<K1,K2,V>{
+public class SortedMultiMap2<K1,K2,V> implements Iterable<Object>{
 	private Map<K1,SortedMultiMap1<K2,V>> container = new TreeMap<K1,SortedMultiMap1<K2,V>>();
 	private String sortedMultiMap1SortType;
 	public SortedMultiMap2(String sortType,String sortedMultiMap1SortType) {
@@ -51,7 +51,7 @@ public class SortedMultiMap2<K1,K2,V>{
 		}
 	}
 
-	public Map<K1,Map<K2,V>> head() {
+	public ThreeTuple<K1,K2,V> head() {
 		return iterator().next();
 	}
     public SortedMultiMap2Iterator<K1,K2,V> iterator() {

@@ -1,5 +1,6 @@
 package com.uchain.crypto;
 
+import lombok.val;
 import org.bouncycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
@@ -59,9 +60,9 @@ public class CryptoUtil {
     }
 
     public static ArrayList<Byte> byteToList(byte []bt){
-        ArrayList<Byte> b = new ArrayList<Byte>();
-
-        for(int i = 0; i < bt.length; i++){
+        val length = bt.length;
+        ArrayList<Byte> b = new ArrayList<Byte>(length);
+        for(int i = 0; i < length; i++){
             b.add(bt[i]);
         }
         return b;

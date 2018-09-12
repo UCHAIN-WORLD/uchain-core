@@ -17,8 +17,12 @@ import com.uchain.core.Block;
 import com.uchain.crypto.CryptoUtil;
 import com.uchain.crypto.PublicKey;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.val;
 
+@Setter
+@Getter
 public class ForkItem {
 	private Block block;
 	private Map<PublicKey, Integer> lastProducerHeight;
