@@ -25,8 +25,8 @@ import lombok.val;
 @Getter
 public class ForkItem {
 	private Block block;
-	private Map<PublicKey, Integer> lastProducerHeight;
-	private boolean master;
+	private Map<PublicKey, Integer> lastProducerHeight; //生产者生产的最新块
+	private boolean master;//是否是当前分叉
 
 	public ForkItem(Block block, Map<PublicKey, Integer> lastProducerHeight, boolean master) {
 		this.block = block;
@@ -34,8 +34,12 @@ public class ForkItem {
 		this.master = false;
 	}
 
-	private int _confirmedHeight = -1;
+	private int _confirmedHeight = -1; //已确认高度
 
+	/**
+	 * 计算已确认高度
+	 * @return
+	 */
 	public int confirmedHeight() {
 		if (_confirmedHeight == -1) {
 			int index = lastProducerHeight.size() * 2 / 3;
@@ -60,6 +64,10 @@ public class ForkItem {
 		return _confirmedHeight;
 	}
 
+	/**
+	 * 序列化
+	 * @return
+	 */
 	public byte[] toBytes() {
 		val bs = new ByteArrayOutputStream();
 		val os = new DataOutputStream(bs);
@@ -81,6 +89,11 @@ public class ForkItem {
 		return bs.toByteArray();
 	}
 
+	/**
+	 * 反序列化
+	 * @param bytes
+	 * @return
+	 */
 	public static ForkItem fromBytes(byte[] bytes) {
 		val bs = new ByteArrayInputStream(bytes);
 		val is = new DataInputStream(bs);

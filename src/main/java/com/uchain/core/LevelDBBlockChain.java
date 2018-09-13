@@ -1,22 +1,53 @@
 package com.uchain.core;
 
-import com.uchain.core.datastore.*;
-import com.uchain.core.datastore.keyvalue.*;
-import com.uchain.crypto.*;
-import com.uchain.main.ChainSettings;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.iq80.leveldb.WriteBatch;
+
+import com.uchain.core.datastore.AccountStore;
+import com.uchain.core.datastore.BlkTxMappingStore;
+import com.uchain.core.datastore.DataStoreConstant;
+import com.uchain.core.datastore.HeadBlockStore;
+import com.uchain.core.datastore.HeaderStore;
+import com.uchain.core.datastore.HeightStore;
+import com.uchain.core.datastore.NameToAccountStore;
+import com.uchain.core.datastore.ProducerStateStore;
+import com.uchain.core.datastore.TransactionStore;
+import com.uchain.core.datastore.keyvalue.AccountValue;
+import com.uchain.core.datastore.keyvalue.BlkTxMappingValue;
+import com.uchain.core.datastore.keyvalue.BlockHeaderValue;
+import com.uchain.core.datastore.keyvalue.HeadBlock;
+import com.uchain.core.datastore.keyvalue.HeadBlockValue;
+import com.uchain.core.datastore.keyvalue.IntKey;
+import com.uchain.core.datastore.keyvalue.ProducerStatus;
+import com.uchain.core.datastore.keyvalue.ProducerStatusValue;
+import com.uchain.core.datastore.keyvalue.StringKey;
+import com.uchain.core.datastore.keyvalue.TransactionValue;
+import com.uchain.core.datastore.keyvalue.UInt160Key;
+import com.uchain.core.datastore.keyvalue.UInt256Key;
+import com.uchain.core.datastore.keyvalue.UInt256Value;
+import com.uchain.crypto.BinaryData;
+import com.uchain.crypto.CryptoUtil;
+import com.uchain.crypto.Fixed8;
+import com.uchain.crypto.MerkleTree;
+import com.uchain.crypto.PrivateKey;
+import com.uchain.crypto.PublicKey;
+import com.uchain.crypto.Scalar;
+import com.uchain.crypto.UInt160;
+import com.uchain.crypto.UInt256;
+import com.uchain.crypto.UInt256Util;
 import com.uchain.main.ConsensusSettings;
 import com.uchain.main.Settings;
 import com.uchain.storage.ConnFacory;
 import com.uchain.storage.LevelDbStorage;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
-import org.iq80.leveldb.WriteBatch;
-
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 @Getter
 @Setter
@@ -26,7 +57,7 @@ public class LevelDBBlockChain implements BlockChain{
 
         private ConsensusSettings consensusSettings;
 
-        public LevelDbStorage db = ConnFacory.getInstance(settings.getChainSettings().getChain_dbDir());
+        public static LevelDbStorage db = ConnFacory.getInstance(settings.getChainSettings().getChain_dbDir());
 
         LevelDBBlockChain(ConsensusSettings consensusSettings){
             this.consensusSettings = consensusSettings;
@@ -279,11 +310,8 @@ public class LevelDBBlockChain implements BlockChain{
             Map<UInt256, Fixed8> balance = balances.get(address);
             val amountBeforeTrans = balance.get(assetId);
             val amountAfterTrans = new Fixed8(amountBeforeTrans.getValue() + amount.getValue());
-            if(balance.containsKey(assetId)) {
-                if(balance.containsKey(assetId))
-                balance.replace(assetId, amountAfterTrans);
-                else balance.put(assetId, amountAfterTrans);
-            }
+            if(balance.containsKey(assetId))  balance.replace(assetId, amountAfterTrans);
+            else balance.put(assetId, amountAfterTrans);
         } else {
             val transRecord = new HashMap<UInt256, Fixed8>();
             transRecord.put(assetId, amount);
@@ -296,7 +324,7 @@ public class LevelDBBlockChain implements BlockChain{
 
         @Override
         public Block produceBlock(PublicKey producer, PrivateKey privateKey, long timeStamp,
-                                  ArrayList<Transaction> transactions){
+                                  List<Transaction> transactions){
             val minerTx = new Transaction(TransactionType.Miner, minerCoinFrom,
                     producer.pubKeyHash(), "", minerAward, UInt256Util.Zero(), new Long((long)(latestHeader.getIndex() + 1)),
                     CryptoUtil.array2binaryData(BinaryData.empty), CryptoUtil.array2binaryData(BinaryData.empty));
@@ -311,7 +339,7 @@ public class LevelDBBlockChain implements BlockChain{
             else return null;
         }
 
-        public ArrayList<Transaction> getUpdateTransaction(Transaction minerTx, ArrayList<Transaction> transactions){
+        public ArrayList<Transaction> getUpdateTransaction(Transaction minerTx, List<Transaction> transactions){
             ArrayList<Transaction> txs = new ArrayList<Transaction>(transactions.size() + 1);
             transactions.forEach(transaction -> {
                 if(verifyTransaction(transaction)) txs.add(transaction);
@@ -320,7 +348,7 @@ public class LevelDBBlockChain implements BlockChain{
             return txs;
         }
 
-        public ArrayList<UInt256> getUpdateTransactionIds(ArrayList<Transaction> transactions){
+        public ArrayList<UInt256> getUpdateTransactionIds(List<Transaction> transactions){
             ArrayList<UInt256> txsIds = new ArrayList<UInt256>(transactions.size());
             transactions.forEach(transaction -> {
                 if(verifyTransaction(transaction)) txsIds.add(transaction.id());

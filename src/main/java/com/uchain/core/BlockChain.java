@@ -1,21 +1,12 @@
 package com.uchain.core;
 
-import com.uchain.core.datastore.*;
-import com.uchain.core.datastore.keyvalue.*;
-import com.uchain.crypto.*;
-import com.uchain.main.ChainSettings;
-import com.uchain.main.ConsensusSettings;
-import com.uchain.storage.ConnFacory;
-import com.uchain.storage.LevelDbStorage;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.val;
-import org.iq80.leveldb.WriteBatch;
-
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import com.uchain.crypto.PrivateKey;
+import com.uchain.crypto.PublicKey;
+import com.uchain.crypto.UInt160;
+import com.uchain.crypto.UInt256;
 
 public interface BlockChain extends Iterable<Block>{
 
@@ -54,6 +45,6 @@ public interface BlockChain extends Iterable<Block>{
     String getGenesisBlockChainId();
 
     Block produceBlock(PublicKey producer, PrivateKey privateKey, long timeStamp,
-                              ArrayList<Transaction> transactions);
+                              List<Transaction> txs);
 
 }
