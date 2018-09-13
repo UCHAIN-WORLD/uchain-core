@@ -6,6 +6,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.uchain.common.Serializabler;
@@ -21,11 +22,11 @@ import lombok.val;
 public class Block implements Identifier<UInt160>{
     private BlockHeader header;
 
-    private ArrayList<Transaction> transactions;
+    private List<Transaction> transactions;
 
     private Map<UInt256, Transaction> txMp = new HashMap<>();
 
-    public Block (BlockHeader header, ArrayList<Transaction> transactions){
+    public Block (BlockHeader header, List<Transaction> transactions){
         this.header = header;
         this.transactions = transactions;
         transactions.forEach(transaction -> {
@@ -69,24 +70,33 @@ public class Block implements Identifier<UInt160>{
 
     @Override
     public void serialize(DataOutputStream os){
-        try{
-            Serializabler.write(os, header);
-            Serializabler.writeSeq(os, transactions);
-        }
-        catch (IOException e){
-            e.printStackTrace();
-        }
+        Serializabler.write(os, header);
+        Serializabler.writeSeq(os, transactions);
     }
 
     public static Block deserialize(DataInputStream is) throws IOException{
         val header = BlockHeader.deserialize(is);
-        val txs = Serializabler.readSeq(is);
+        val txs = readSeq(is);
         return new Block(header, txs);
     }
     
-    public static Block fromBytes(byte[] data) throws IOException{
+    public static List<Transaction> readSeq(DataInputStream is) throws IOException {
+		int size = is.readInt();
+		List<Transaction> transactions = new ArrayList<Transaction>(size);
+		for(int i = 0; i < size; i++){
+			transactions.add(Transaction.deserialize(is));
+		}
+		return transactions;
+	}
+    
+    public static Block fromBytes(byte[] data){
         val bs = new ByteArrayInputStream(data);
         val is = new DataInputStream(bs);
-        return deserialize(is);
+        try {
+			return deserialize(is);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
     }
 }

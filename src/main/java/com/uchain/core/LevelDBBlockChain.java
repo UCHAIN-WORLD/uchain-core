@@ -5,9 +5,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.iq80.leveldb.WriteBatch;
 
+import com.uchain.core.consensus.ForkBase;
 import com.uchain.core.datastore.AccountStore;
 import com.uchain.core.datastore.BlkTxMappingStore;
 import com.uchain.core.datastore.DataStoreConstant;
@@ -65,8 +67,8 @@ public class LevelDBBlockChain implements BlockChain{
             if(headBlockStore == null) reInit();
             else init(headBlockStore);
         }
+        ForkBase forkBase = new ForkBase(settings,this);
 
-//        public LevelDbStorage db = ConnFacory.getInstance(settings.getChain_dbDir());
 
 
         private BinaryData genesisProducer = new BinaryData(settings.getChainSettings().getChain_genesis_publicKey()); // TODO: read from settings
@@ -321,7 +323,9 @@ public class LevelDBBlockChain implements BlockChain{
         }
 
 
-
+        /**
+         * 产生区块
+         */
         @Override
         public Block produceBlock(PublicKey producer, PrivateKey privateKey, long timeStamp,
                                   List<Transaction> transactions){
@@ -329,31 +333,31 @@ public class LevelDBBlockChain implements BlockChain{
                     producer.pubKeyHash(), "", minerAward, UInt256Util.Zero(), new Long((long)(latestHeader.getIndex() + 1)),
                     CryptoUtil.array2binaryData(BinaryData.empty), CryptoUtil.array2binaryData(BinaryData.empty));
             val txs = getUpdateTransaction(minerTx, transactions);
-            val merkleRoot = MerkleTree.root(getUpdateTransactionIds(txs));
+            val merkleRoot = MerkleTree.root(transactions.stream().map(v -> v.id()).collect(Collectors.toList()));
             val header = BlockHeader.build(latestHeader.getIndex() + 1, timeStamp, merkleRoot,
                     latestHeader.id(), producer.toBin(), privateKey);
             val block = new Block(header, txs);
 
-            if(tryInsertBlock(block))
-                return block;
-            else return null;
+			if (forkBase.add(block)) {
+				return block;
+			} else {
+				return null;
+			}
         }
 
-        public ArrayList<Transaction> getUpdateTransaction(Transaction minerTx, List<Transaction> transactions){
-            ArrayList<Transaction> txs = new ArrayList<Transaction>(transactions.size() + 1);
+        /**
+         * 校验交易，并把矿工交易置为第一条记录
+         * @param minerTx
+         * @param transactions
+         * @return
+         */
+        private List<Transaction> getUpdateTransaction(Transaction minerTx, List<Transaction> transactions){
+            List<Transaction> txs = new ArrayList<Transaction>(transactions.size() + 1);
             transactions.forEach(transaction -> {
                 if(verifyTransaction(transaction)) txs.add(transaction);
             });
-            txs.add(minerTx);
+            txs.add(0,minerTx);
             return txs;
-        }
-
-        public ArrayList<UInt256> getUpdateTransactionIds(List<Transaction> transactions){
-            ArrayList<UInt256> txsIds = new ArrayList<UInt256>(transactions.size());
-            transactions.forEach(transaction -> {
-                if(verifyTransaction(transaction)) txsIds.add(transaction.id());
-            });
-            return txsIds;
         }
 
         @Override
@@ -386,7 +390,7 @@ public class LevelDBBlockChain implements BlockChain{
             return true;
         }
 
-        private boolean verifyRegisterNames(ArrayList<Transaction> transactions){
+        private boolean verifyRegisterNames(List<Transaction> transactions){
             val newNames = new ArrayList<String>();
             val registers = new ArrayList<UInt160>();
             for(Transaction tx: transactions){
@@ -430,7 +434,7 @@ public class LevelDBBlockChain implements BlockChain{
             return flag;
         }
 
-        private boolean forAllTransactionsVerify(ArrayList<Transaction> transactions) {
+        private boolean forAllTransactionsVerify(List<Transaction> transactions) {
             boolean flag = true;
             for(Transaction transaction : transactions){
                 if(! verifyTransaction(transaction)) {
@@ -465,14 +469,11 @@ public class LevelDBBlockChain implements BlockChain{
                 // TODO check miner and only one miner tx
                 return true;
             }
-
             val isInvalid = tx.verifySignature();
-
             return isInvalid && checkAmount();
         }
 
         boolean checkAmount(){
-            // TODO
             return true;
         }
 

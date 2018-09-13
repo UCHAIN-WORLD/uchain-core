@@ -18,6 +18,8 @@ import com.uchain.network.NetworkUtil.Handshaked;
 import com.uchain.network.NetworkUtil.Message;
 import com.uchain.network.NetworkUtil.PeerHandler;
 import com.uchain.network.NetworkUtil.StartInteraction;
+import com.uchain.network.message.BlockMessageImpl.BlockMessage;
+import com.uchain.network.message.MessagePack;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -92,6 +94,27 @@ public class PeerHandlerManager extends AbstractActor{
 		      .match(Disconnected.class, msg -> {
 		    	  connectedPeers.remove(msg.getRemoteAddress());
 		    	  connectingPeers.remove(msg.getRemoteAddress());
+	          })
+		      .match(BlockMessage.class, msg -> {
+		    	  log.info("broadcasting BlockMessage");
+		    	  connectedPeers.forEach((socketAddress, connectedPeer) -> {
+		    		  connectedPeer.getHandlerRef().tell(msg.pack(), getSelf());
+		    		  log.info("send block "+msg.getBlock().height()+"("+msg.getBlock().id()+") to "+connectedPeer.toString());
+		    	  });
+	          })
+		      .match(MessagePack.class, msg -> {
+		    	  if(msg.getAddress() !=null) {
+		    		  ConnectedPeer peer = connectedPeers.get(msg.getAddress());
+		    		  if(peer != null) {
+		    			  peer.getHandlerRef().tell(new MessagePack(msg.getMessageType(),msg.getData(),null),getSelf());
+		    		  }else {
+		    			  log.error("peer("+msg.getAddress()+") not exists");
+		    		  }
+		    	  }else {
+		    		  connectedPeers.forEach((socketAddress, connectedPeer) -> {
+			    		  connectedPeer.getHandlerRef().tell(new MessagePack(msg.getMessageType(),msg.getData(),null),getSelf());
+			    	  });
+		    	  }
 	          })
 		      .build();
 	}

@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.uchain.common.Serializabler;
 import com.uchain.main.Settings;
 import com.uchain.network.NetworkUtil.CloseConnection;
 import com.uchain.network.NetworkUtil.ConnectedPeer;
@@ -18,6 +19,8 @@ import com.uchain.network.NetworkUtil.HandshakeTimeout;
 import com.uchain.network.NetworkUtil.Handshaked;
 import com.uchain.network.NetworkUtil.Message;
 import com.uchain.network.NetworkUtil.StartInteraction;
+import com.uchain.network.message.MessagePack;
+import com.uchain.network.message.MessageType;
 import com.uchain.util.Object2Array;
 
 import akka.actor.AbstractActor;
@@ -140,14 +143,20 @@ public class PeerConnectionManager extends AbstractActor {
 	}
 
 	private Receive workingCycle(final ActorRef connection) {
-		return receiveBuilder().match(Message.class, msg -> {
+		return receiveBuilder().match(MessagePack.class, msg -> {
 			log.info("发送的消息:" + msg);
+			byte[] messageTypeid = Object2Array.intToByteArray(MessageType.getMessageTypeByType(msg.getMessageType()));
+			byte[] bt = new byte[messageTypeid.length + msg.getData().length];
+	        System.arraycopy(messageTypeid, 0, bt, 0, messageTypeid.length);
+	        System.arraycopy(msg.getData(), 0, bt, messageTypeid.length, msg.getData().length);
 			connection.tell(TcpMessage.register(connection), getSelf());
-			connection.tell(TcpMessage.write(ByteString.fromArray(Object2Array.objectToByteArray(msg))), getSelf());
+			connection.tell(TcpMessage.write(ByteString.fromArray(bt)), getSelf());
 		}).match(Received.class, msg -> {
+			connection.tell(TcpMessage.resumeReading(), getSelf());
+			MessagePack.fromBytes((((Received) msg).data()).toArray(), null);
+			
 			Message message = (Message) Object2Array.byteArrayToObject((((Received) msg).data()).toArray());
 			log.info("接收的消息:" + message);
-			
 			Message message1 = new Message("2","message_test");
 			connection.tell(TcpMessage.register(connection), getSelf());
 			connection.tell(TcpMessage.write(ByteString.fromArray(Object2Array.objectToByteArray(message1))), getSelf());

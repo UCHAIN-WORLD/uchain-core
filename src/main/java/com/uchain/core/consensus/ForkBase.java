@@ -14,9 +14,7 @@ import com.uchain.common.Serializabler;
 import com.uchain.core.Block;
 import com.uchain.core.LevelDBBlockChain;
 import com.uchain.crypto.BinaryData;
-import com.uchain.crypto.Fixed8;
 import com.uchain.crypto.PublicKey;
-import com.uchain.crypto.UInt160;
 import com.uchain.crypto.UInt256;
 import com.uchain.exceptions.UnExpectedError;
 import com.uchain.main.Settings;
@@ -27,20 +25,19 @@ import com.uchain.storage.LevelDbStorage;
 
 public class ForkBase {
 	private static final Logger log = LoggerFactory.getLogger(ForkBase.class);
-	private String dir;
 	private Settings settings;
 	private ForkItem _head;
 	private LevelDBBlockChain levelDBBlockChain;
-	Map<UInt256, ForkItem> indexById = new HashMap<UInt256, ForkItem>();
-	MultiMap<UInt256, UInt256> indexByPrev = new MultiMap<UInt256, UInt256>();		  
-	SortedMultiMap2<Integer,Boolean,UInt256> indexByHeight = new SortedMultiMap2<Integer,Boolean,UInt256>("asc","reverse");
-	SortedMultiMap2<Integer,Integer,UInt256> indexByConfirmedHeight = new SortedMultiMap2<Integer,Integer,UInt256>("reverse","reverse");
-	LevelDbStorage db = ConnFacory.getInstance(dir);
+	private LevelDbStorage db;
+	private Map<UInt256, ForkItem> indexById = new HashMap<UInt256, ForkItem>();
+	private MultiMap<UInt256, UInt256> indexByPrev = new MultiMap<UInt256, UInt256>();		  
+	private SortedMultiMap2<Integer,Boolean,UInt256> indexByHeight = new SortedMultiMap2<Integer,Boolean,UInt256>("asc","reverse");
+	private SortedMultiMap2<Integer,Integer,UInt256> indexByConfirmedHeight = new SortedMultiMap2<Integer,Integer,UInt256>("reverse","reverse");
 	
 	
-	public ForkBase(String dir, Settings settings,LevelDBBlockChain levelDBBlockChain) {
+	public ForkBase(Settings settings,LevelDBBlockChain levelDBBlockChain) {
 		init();
-		this.dir = dir;
+		this.db = ConnFacory.getInstance(settings.getChainSettings().getChain_dbDir());
 		this.settings = settings;
 		this.levelDBBlockChain = levelDBBlockChain;
 	}
@@ -212,25 +209,6 @@ public class ForkBase {
 		log.info("confirm block height:"+ block.height()+" block id:"+block.id());
 		if(block.height() != 0) {
 			levelDBBlockChain.saveBlockToStores(block);
-		}
-	}
-	
-	private void calcBalancesInBlock(Map<UInt160, Map<UInt256, Fixed8>> balances,Boolean spent,
-			UInt160 address,Fixed8 amounts,UInt256 assetId) {
-		Fixed8 amount = null;
-		if (spent) 
-			amount = amounts.unary();
-		else 
-			amount = amounts;
-		Map<UInt256, Fixed8> balance = balances.get(address);
-		if(balance!=null) {
-			Fixed8 value = balance.get(assetId);
-			value = value.add(amount);
-			balance.put(assetId, value);
-		}else {
-			Map<UInt256, Fixed8> map = new HashMap<UInt256, Fixed8>();
-			map.put(assetId, amount);
-			balances.put(address, map);
 		}
 	}
 	

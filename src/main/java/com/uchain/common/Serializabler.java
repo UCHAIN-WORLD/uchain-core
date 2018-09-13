@@ -75,11 +75,15 @@ public class Serializabler {
 		value.serialize(os);
 	}
 
-	public static void writeSeq(DataOutputStream os, ArrayList<Transaction> transactions) throws IOException{
-		os.writeInt(transactions.size());
-		transactions.forEach(transaction -> {
-			transaction.serialize(os);
-		});
+	public static <T extends Serializable> void  writeSeq(DataOutputStream os, List<T> t){
+		try {
+			os.writeInt(t.size());
+			t.forEach(v -> {
+				v.serialize(os);
+			});
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static void writeMap(DataOutputStream os, Map<UInt256, Fixed8> map) throws IOException {
@@ -90,15 +94,6 @@ public class Serializabler {
 		});
 	}
 	
-	public static Map<UInt256, Fixed8> readMap(DataInputStream is) throws IOException {
-		Map<UInt256, Fixed8> map = Maps.newLinkedHashMap();
-		int size = is.readInt();
-		for (int i = 0; i < size; i++) {
-			map.put(UInt256Util.deserialize(is), Fixed8.deserialize(is));
-		}
-		return map;
-	}
-	
 	public static byte[] readByteArray(DataInputStream is) throws IOException {
 		byte[] data = new byte[is.readInt()];
         Arrays.fill(data, (byte)0);
@@ -106,15 +101,6 @@ public class Serializabler {
 		return data;
 	}
 
-	public static ArrayList<Transaction> readSeq(DataInputStream is) throws IOException {
-		int size = is.readInt();
-		ArrayList<Transaction> transactions = new ArrayList<Transaction>(size);
-		for(int i = 0; i < size; i++){
-			transactions.add(Transaction.deserialize(is));
-		}
-		return transactions;
-	}
-	
 	public static String readString(DataInputStream is) throws UnsupportedEncodingException, IOException {
 		return new String(readByteArray(is), "UTF-8");
 	}

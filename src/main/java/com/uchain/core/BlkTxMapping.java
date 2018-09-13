@@ -28,7 +28,7 @@ public class BlkTxMapping implements Serializable{
 
 	public void serialize(DataOutputStream os) {
 		Serializabler.write(os, blkId);
-		writeSeq(os,txIds);
+		Serializabler.writeSeq(os,txIds);
 	}
 	
 	public static BlkTxMapping deserialize(DataInputStream is) throws IOException {
@@ -42,16 +42,5 @@ public class BlkTxMapping implements Serializable{
 			uInt256.add(UInt256Util.deserialize(is));
 		}
 		return uInt256;
-	}
-	
-	public static void writeSeq(DataOutputStream os, List<UInt256> txIds){
-		try {
-			os.writeInt(txIds.size());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		txIds.forEach(txId -> {
-			txId.serialize(os);
-		});
 	}
 }

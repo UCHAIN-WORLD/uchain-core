@@ -1,7 +1,5 @@
 package com.uchain.core;
 
-import com.uchain.core.datastore.DataType;
-
 public enum TransactionType {
 	Miner(0x00),Transfer(0x01),Fee(0x02),RegisterName(0x03);
 
@@ -39,6 +37,6 @@ public enum TransactionType {
     }
     
     public static void main(String[] args) {
-    	System.out.println((byte) DataType.getDataType(DataType.Transaction));
+    	System.out.println(TransactionType.getTransactionTypeByType(TransactionType.RegisterName));
 	}
 }
