@@ -16,7 +16,7 @@ import com.uchain.crypto.BinaryData;
 import com.uchain.crypto.Fixed8;
 import com.uchain.crypto.PrivateKey;
 import com.uchain.crypto.PublicKeyHash;
-import com.uchain.crypto.UInt256Util;
+import com.uchain.crypto.UInt256;
 
 import lombok.val;
 
@@ -28,7 +28,7 @@ public class TransactionTest {
 
 		Transaction tx = new Transaction(TransactionType.Transfer,
 				new BinaryData("0345ffbf8dc9d8ff15785e2c228ac48d98d29b834c2e98fb8cfe6e71474d7f6322"),
-				PublicKeyHash.fromAddress("APGMmPKLYdtTNhiEkDGU6De8gNCk3bTsME9"), "bob", Fixed8.Ten, UInt256Util.Zero(),
+				PublicKeyHash.fromAddress("APGMmPKLYdtTNhiEkDGU6De8gNCk3bTsME9"), "bob", Fixed8.Ten, UInt256.Zero(),
 				1L, new BinaryData("1234"), new BinaryData(new ArrayList<>()));
 
 		tx.sign(privKey);

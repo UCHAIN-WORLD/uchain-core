@@ -23,10 +23,14 @@ public interface BlockChain extends Iterable<Block>{
     BlockHeader getHeader(UInt256 id);
 
     BlockHeader getHeader(int index);
+    
+    UInt256 getNextBlockId(UInt256 id);
 
     Block getBlock(int height);
 
     Block getBlock(UInt256 id);
+    
+    Block getBlockInForkBase(UInt256 id);
 
     boolean containsBlock(UInt256 id);
 
@@ -46,5 +50,5 @@ public interface BlockChain extends Iterable<Block>{
 
     Block produceBlock(PublicKey producer, PrivateKey privateKey, long timeStamp,
                               List<Transaction> txs);
-
+    Account getAccount(UInt160 address);
 }

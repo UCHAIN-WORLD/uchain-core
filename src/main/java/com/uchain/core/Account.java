@@ -12,7 +12,6 @@ import com.uchain.crypto.Crypto;
 import com.uchain.crypto.Fixed8;
 import com.uchain.crypto.UInt160;
 import com.uchain.crypto.UInt256;
-import com.uchain.crypto.UInt256Util;
 import com.uchain.crypto.UIntBase;
 
 import lombok.Getter;
@@ -95,7 +94,7 @@ public class Account implements Identifier<UInt160> {
 		Map<UInt256, Fixed8> map = Maps.newLinkedHashMap();
 		int size = is.readInt();
 		for (int i = 0; i < size; i++) {
-			map.put(UInt256Util.deserialize(is), Fixed8.deserialize(is));
+			map.put(UInt256.deserialize(is), Fixed8.deserialize(is));
 		}
 		return map;
 	}

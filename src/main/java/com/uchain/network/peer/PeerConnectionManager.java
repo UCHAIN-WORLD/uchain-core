@@ -6,7 +6,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.uchain.common.Serializabler;
 import com.uchain.main.Settings;
 import com.uchain.network.NetworkUtil.CloseConnection;
 import com.uchain.network.NetworkUtil.ConnectedPeer;
@@ -42,13 +41,13 @@ public class PeerConnectionManager extends AbstractActor {
 	private InetSocketAddress direction;
 	private InetSocketAddress remote;
 	private ActorRef networkManager;
-
+	private ActorRef nodeActor;
 	private Cancellable handshakeTimeoutCancellableOpt;
 	private boolean handshakeSent = false;
 	private boolean handshakeGot = false;
 	private Handshake receivedHandshake;
 
-	public PeerConnectionManager(Settings settings, ActorRef peerHandlerActor, ActorRef connection,
+	public PeerConnectionManager(Settings settings, ActorRef peerHandlerActor, ActorRef nodeActor, ActorRef connection,
 			InetSocketAddress direction, InetSocketAddress remote, ActorRef networkManager) {
 		this.settings = settings;
 		this.peerHandlerActor = peerHandlerActor;
@@ -56,15 +55,15 @@ public class PeerConnectionManager extends AbstractActor {
 		this.direction = direction;
 		this.remote = remote;
 		this.networkManager = networkManager;
-
+		this.nodeActor = nodeActor;
 		getContext().watch(peerHandlerActor);
 		getContext().watch(connection);
 		getContext().watch(networkManager);
 	}
 
-	public static Props props(Settings settings, ActorRef peerHandlerActor, ActorRef connection,
+	public static Props props(Settings settings, ActorRef peerHandlerActor, ActorRef nodeActor,ActorRef connection,
 			InetSocketAddress direction, InetSocketAddress remote, ActorRef networkManager) {
-		return Props.create(PeerConnectionManager.class, settings, peerHandlerActor, connection, direction, remote,
+		return Props.create(PeerConnectionManager.class, settings, peerHandlerActor, nodeActor,connection, direction, remote,
 				networkManager);
 	}
 
@@ -153,14 +152,7 @@ public class PeerConnectionManager extends AbstractActor {
 			connection.tell(TcpMessage.write(ByteString.fromArray(bt)), getSelf());
 		}).match(Received.class, msg -> {
 			connection.tell(TcpMessage.resumeReading(), getSelf());
-			MessagePack.fromBytes((((Received) msg).data()).toArray(), null);
-			
-			Message message = (Message) Object2Array.byteArrayToObject((((Received) msg).data()).toArray());
-			log.info("接收的消息:" + message);
-			Message message1 = new Message("2","message_test");
-			connection.tell(TcpMessage.register(connection), getSelf());
-			connection.tell(TcpMessage.write(ByteString.fromArray(Object2Array.objectToByteArray(message1))), getSelf());
-			System.out.println("aaaaaaaaaaaaa");
+			nodeActor.tell(MessagePack.fromBytes((((Received) msg).data()).toArray(), null), getSelf());
 		}).build();
 	}
 	

@@ -14,7 +14,6 @@ import com.uchain.core.Account;
 import com.uchain.crypto.Crypto;
 import com.uchain.crypto.UInt160;
 import com.uchain.crypto.UInt256;
-import com.uchain.crypto.UInt256Util;
 
 import lombok.val;
 
@@ -38,7 +37,7 @@ public class SerializerTest<A extends Serializable> {
     }
 
     public static UInt256 testHash256(String str) throws IOException {
-        return UInt256Util.fromBytes(Crypto.hash256(str.getBytes("UTF-8")));
+        return UInt256.fromBytes(Crypto.hash256(str.getBytes("UTF-8")));
     }
 
     public static UInt160 testHash160(String str) throws IOException {

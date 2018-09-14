@@ -10,14 +10,16 @@ import java.util.ArrayList;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uchain.common.Serializabler;
-import com.uchain.crypto.*;
+import com.uchain.crypto.BinaryData;
+import com.uchain.crypto.Crypto;
+import com.uchain.crypto.CryptoUtil;
+import com.uchain.crypto.PrivateKey;
+import com.uchain.crypto.UInt160;
+import com.uchain.crypto.UInt256;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
-import org.bouncycastle.util.encoders.Hex;
-
-import java.io.*;
-import java.util.ArrayList;
 
 @Getter
 @Setter
@@ -100,7 +102,7 @@ public class BlockHeader implements Identifier<UInt160> {
 		val bs = new ByteArrayOutputStream();
 		val os = new DataOutputStream(bs);
 		serializeExcludeId(os);
-		return UInt256Util.fromBytes(Crypto.hash256(bs.toByteArray()));
+		return UInt256.fromBytes(Crypto.hash256(bs.toByteArray()));
 	}
 
 	private void serializeForSign(DataOutputStream os) {
@@ -167,8 +169,8 @@ public class BlockHeader implements Identifier<UInt160> {
 		int version = is.readInt();
 		int index = is.readInt();
 		long timeStamp = is.readLong();
-		UInt256 merkleRoot = UInt256Util.deserialize(is);
-		UInt256 prevBlock = UInt256Util.deserialize(is);
+		UInt256 merkleRoot = UInt256.deserialize(is);
+		UInt256 prevBlock = UInt256.deserialize(is);
 		BinaryData producer = CryptoUtil.array2binaryData(Serializabler.readByteArray(is));
 		BinaryData producerSig = CryptoUtil.array2binaryData(Serializabler.readByteArray(is));
 		return new BlockHeader(index, timeStamp, merkleRoot, prevBlock,producer,producerSig/*, version, UInt256Util.deserialize(is)*/);

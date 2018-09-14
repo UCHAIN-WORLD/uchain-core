@@ -38,18 +38,21 @@ public class NetworkManager extends AbstractActor {
 
 	private ActorRef peerHandlerActor;
 
+	private ActorRef nodeActor;
+	
 	private String[] localAddress;
 
 	private Set<InetSocketAddress> outgoing = new HashSet<InetSocketAddress>();
 
-	public NetworkManager(Settings settings, ActorRef peerHandlerActor) {
+	public NetworkManager(Settings settings, ActorRef peerHandlerActor,ActorRef nodeActor) {
 		this.peerHandlerActor = peerHandlerActor;
 		this.settings = settings;
+		this.nodeActor = nodeActor;
 		localAddress = settings.getBindAddress().split(":");
 	}
 
-	public static Props props(Settings settings, ActorRef peerHandlerActor) {
-		return Props.create(NetworkManager.class, settings, peerHandlerActor);
+	public static Props props(Settings settings, ActorRef peerHandlerActor,ActorRef nodeActor) {
+		return Props.create(NetworkManager.class, settings, peerHandlerActor,nodeActor);
 	}
 
 	@Override
@@ -108,7 +111,7 @@ public class NetworkManager extends AbstractActor {
 
 			ActorSystem peerConnectionManagerSystem = ActorSystem.create("peerConnectionManagerSystem");
 			peerConnectionManagerActor = peerConnectionManagerSystem.actorOf(PeerConnectionManager.props(settings,
-					peerHandlerActor, connection, direction, msg.remoteAddress(), getSelf()), "peerConnectionManager");
+					peerHandlerActor, nodeActor,connection, direction, msg.remoteAddress(), getSelf()), "peerConnectionManager");
 
 			outgoing.remove(msg.remoteAddress());
 		}).match(GetHandlerToPeerConnectionManager.class, msg -> {

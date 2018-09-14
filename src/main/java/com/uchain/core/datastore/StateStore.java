@@ -2,7 +2,6 @@ package com.uchain.core.datastore;
 
 import org.iq80.leveldb.WriteBatch;
 
-import com.uchain.common.LRUCache;
 import com.uchain.core.datastore.keyvalue.Converter;
 import com.uchain.storage.LevelDbStorage;
 

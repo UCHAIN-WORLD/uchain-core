@@ -4,9 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -18,7 +16,6 @@ import com.uchain.core.Account;
 import com.uchain.crypto.Crypto;
 import com.uchain.crypto.Fixed8;
 import com.uchain.crypto.UInt256;
-import com.uchain.crypto.UInt256Util;
 
 import lombok.val;
 
@@ -28,7 +25,7 @@ public class AccountTest {
     public void testSerialize() throws IOException {
         Map<UInt256, Fixed8> balances = Maps.newLinkedHashMap();
         for(int i = 1; i<= 10; i++){
-            UInt256 key = UInt256Util.fromBytes(Crypto.hash256(("test"+i).getBytes("UTF-8")));
+            UInt256 key = UInt256.fromBytes(Crypto.hash256(("test"+i).getBytes("UTF-8")));
             Fixed8 value = new Fixed8(Long.parseLong(i+""));
             balances.put(key, value);
         }

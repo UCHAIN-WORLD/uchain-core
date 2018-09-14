@@ -9,7 +9,15 @@ import java.util.ArrayList;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uchain.common.Serializabler;
-import com.uchain.crypto.*;
+import com.uchain.crypto.BinaryData;
+import com.uchain.crypto.Crypto;
+import com.uchain.crypto.CryptoUtil;
+import com.uchain.crypto.Fixed8;
+import com.uchain.crypto.PrivateKey;
+import com.uchain.crypto.PublicKey;
+import com.uchain.crypto.PublicKeyHash;
+import com.uchain.crypto.UInt160;
+import com.uchain.crypto.UInt256;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -78,7 +86,7 @@ public class Transaction implements Identifier<UInt256> {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return UInt256Util.fromBytes(Crypto.hash256(bs.toByteArray()));
+		return UInt256.fromBytes(Crypto.hash256(bs.toByteArray()));
 	}
 
 	private void serializeExcludeId(DataOutputStream os) throws IOException {
@@ -157,7 +165,7 @@ public class Transaction implements Identifier<UInt256> {
 		val toPubKeyHash = UInt160.deserialize(is);
 		val toName = Serializabler.readString(is);
 		val amount = Fixed8.deserialize(is);
-		UInt256 assetId = UInt256Util.deserialize(is);
+		UInt256 assetId = UInt256.deserialize(is);
 		val nonce = is.readLong();
 		val data = CryptoUtil.array2binaryData(Serializabler.readByteArray(is));
 		val signature = CryptoUtil.array2binaryData(Serializabler.readByteArray(is));

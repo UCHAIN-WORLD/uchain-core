@@ -10,7 +10,6 @@ import java.util.List;
 import com.uchain.common.Serializable;
 import com.uchain.common.Serializabler;
 import com.uchain.crypto.UInt256;
-import com.uchain.crypto.UInt256Util;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -41,7 +40,7 @@ public class Inventory implements Serializable {
 			size = is.readInt();
 			uInt256s = new ArrayList<UInt256>(size);
 			for(int i = 0; i < size; i++){
-				uInt256s.add(UInt256Util.deserialize(is));
+				uInt256s.add(UInt256.deserialize(is));
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

@@ -9,7 +9,6 @@ import com.uchain.common.Serializable;
 import com.uchain.common.Serializabler;
 import com.uchain.core.BlockHeader;
 import com.uchain.crypto.UInt256;
-import com.uchain.crypto.UInt256Util;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -25,14 +24,14 @@ public class HeadBlock implements Serializable{
 	}
 
 	public static HeadBlock deserialize(DataInputStream is) throws IOException {
-		return new HeadBlock(is.readInt(), UInt256Util.deserialize(is));
+		return new HeadBlock(is.readInt(), UInt256.deserialize(is));
 	}
 
 	public static ArrayList<UInt256> readSeq(DataInputStream is) throws IOException {
 		int size = is.readInt();
 		ArrayList<UInt256> uInt256 = new ArrayList<UInt256>(size);
 		for(int i = 0; i < size; i++){
-			uInt256.add(UInt256Util.deserialize(is));
+			uInt256.add(UInt256.deserialize(is));
 		}
 		return uInt256;
 	}
