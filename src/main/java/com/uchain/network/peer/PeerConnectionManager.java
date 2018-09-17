@@ -151,6 +151,7 @@ public class PeerConnectionManager extends AbstractActor {
 			connection.tell(TcpMessage.register(connection), getSelf());
 			connection.tell(TcpMessage.write(ByteString.fromArray(bt)), getSelf());
 		}).match(Received.class, msg -> {
+			log.info("接收的消息:" + msg);
 			connection.tell(TcpMessage.resumeReading(), getSelf());
 			nodeActor.tell(MessagePack.fromBytes((((Received) msg).data()).toArray(), null), getSelf());
 		}).build();

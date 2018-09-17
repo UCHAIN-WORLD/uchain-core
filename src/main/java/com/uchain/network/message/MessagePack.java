@@ -4,7 +4,6 @@ import java.math.BigInteger;
 import java.net.InetSocketAddress;
 
 import com.uchain.core.Block;
-import com.uchain.core.producer.ProduceState;
 import com.uchain.network.message.BlockMessageImpl.BlockMessage;
 import com.uchain.network.message.BlockMessageImpl.GetBlocksMessage;
 import com.uchain.network.message.BlockMessageImpl.GetDataMessage;
@@ -43,7 +42,7 @@ public class MessagePack {
 				packMessage = new BlockMessage(Block.fromBytes(data));
 				break;
 			case Inventory:
-				packMessage = new InventoryMessage(Inventory.fromBytes(data));
+				packMessage = new InventoryMessage(InventoryPayload.fromBytes(data));
 				break;
 			case Getdata:
 				packMessage = new GetDataMessage(Inventory.fromBytes(data));

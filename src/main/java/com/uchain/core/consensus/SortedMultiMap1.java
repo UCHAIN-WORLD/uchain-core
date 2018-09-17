@@ -1,9 +1,10 @@
 package com.uchain.core.consensus;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import com.google.common.collect.Lists;
 
 public class SortedMultiMap1<K, V> {
 	private Map<K, List<V>> container = null;
@@ -34,7 +35,9 @@ public class SortedMultiMap1<K, V> {
 
 	public void put(K k, V v) {
 		if (!container.containsKey(k)) {
-			container.put(k, new ArrayList<V>());
+			List<V> list = Lists.newArrayList();
+			list.add(v);
+			container.put(k, list);
 		} else {
 			container.get(k).add(v);
 		}

@@ -34,9 +34,12 @@ public class SortedMultiMap2<K1,K2,V> implements Iterable<Object>{
 
 	public void put(K1 k1,K2 k2,V v) {
 		if(!container.containsKey(k1)) {
-			container.put(k1, new SortedMultiMap1<K2,V>(sortedMultiMap1SortType));
+			SortedMultiMap1<K2, V> sortedMultiMap1  = new SortedMultiMap1<K2,V>(sortedMultiMap1SortType);
+			sortedMultiMap1.put(k2, v);
+			container.put(k1, sortedMultiMap1);
+		}else {
+			container.get(k1).put(k2, v);
 		}
-		container.get(k1).put(k2, v);
 	}
 	
 	public List<V> remove(K1 k1,K2 k2) {

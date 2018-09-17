@@ -65,9 +65,9 @@ public class BlockMessageImpl {
 	@Setter
 	public static class InventoryMessage implements PackMessage {
 		private MessageType messageType;
-		private Inventory inv;
+		private InventoryPayload inv;
 
-		public InventoryMessage(Inventory inv) {
+		public InventoryMessage(InventoryPayload inv) {
 			this.messageType = MessageType.Inventory;
 			this.inv = inv;
 		}

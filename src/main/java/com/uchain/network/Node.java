@@ -17,6 +17,7 @@ import com.uchain.network.message.BlockMessageImpl.InventoryMessage;
 import com.uchain.network.message.BlockMessageImpl.VersionMessage;
 import com.uchain.network.message.GetBlocksPayload;
 import com.uchain.network.message.Inventory;
+import com.uchain.network.message.InventoryPayload;
 import com.uchain.network.message.InventoryType;
 import com.uchain.network.message.PackMessage;
 
@@ -57,22 +58,26 @@ public class Node extends AbstractActor{
 		    }
 		}).match(GetBlocksMessage.class, msg -> {
 			log.info("received GetBlocksMessage");
-	        List<UInt256> hashs = Lists.newArrayList();
-	        UInt256 hash = msg.getBlockHashs().getHashStart().get(0);
-	        hashs.add(hash);
-	       UInt256 next = chain.getNextBlockId(hash);
-	       while(next != null) {
-	    	   hashs.add(next);
-	    	   next = chain.getNextBlockId(next);
-	       }
-	        
-	        log.info("send InventoryMessage");
-	        getSender().tell(new InventoryMessage(new Inventory(InventoryType.Block, hashs)).pack(), getSelf());
+			List<UInt256> hashs = Lists.newArrayList();
+			UInt256 hash = msg.getBlockHashs().getHashStart().get(0);
+			if(hash.equals(UInt256.Zero())) {
+				getSender().tell(new InventoryMessage(new InventoryPayload(InventoryType.Block, Arrays.asList(chain.getLatestHeader().id()))).pack(), getSelf());
+			}else {
+				hashs.add(hash);
+				UInt256 next = chain.getNextBlockId(hash);
+				while (next != null) {
+					hashs.add(next);
+					next = chain.getNextBlockId(next);
+				}
+				
+				log.info("send InventoryMessage");
+				getSender().tell(new InventoryMessage(new InventoryPayload(InventoryType.Block, hashs)).pack(), getSelf());
+			}
 		}).match(BlockMessage.class, msg -> {
 			log.info("received block "+msg.getBlock().height()+" ("+msg.getBlock().id()+")");
 			if(chain.tryInsertBlock(msg.getBlock())) {
 				log.info("insert block "+msg.getBlock().height()+" ("+msg.getBlock().id()+") success");
-				peerHandlerManager.tell(new InventoryMessage(new Inventory(InventoryType.Block, Arrays.asList(msg.getBlock().id()))), getSelf());
+				peerHandlerManager.tell(new InventoryMessage(new InventoryPayload(InventoryType.Block, Arrays.asList(msg.getBlock().id()))), getSelf());
 			}else {
 				log.error("failed insert block "+msg.getBlock().height()+", ("+msg.getBlock().id()+") to db");
 				if(msg.getBlock().height() > chain.getLatestHeader().getIndex()) {

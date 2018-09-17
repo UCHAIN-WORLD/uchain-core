@@ -19,6 +19,7 @@ import com.uchain.network.NetworkUtil.Message;
 import com.uchain.network.NetworkUtil.PeerHandler;
 import com.uchain.network.NetworkUtil.StartInteraction;
 import com.uchain.network.message.BlockMessageImpl.BlockMessage;
+import com.uchain.network.message.BlockMessageImpl.InventoryMessage;
 import com.uchain.network.message.MessagePack;
 
 import akka.actor.AbstractActor;
@@ -100,6 +101,11 @@ public class PeerHandlerManager extends AbstractActor{
 		    	  connectedPeers.forEach((socketAddress, connectedPeer) -> {
 		    		  connectedPeer.getHandlerRef().tell(msg.pack(), getSelf());
 		    		  log.info("send block "+msg.getBlock().height()+"("+msg.getBlock().id()+") to "+connectedPeer.toString());
+		    	  });
+	          })
+		      .match(InventoryMessage.class, msg -> {
+		    	  connectedPeers.forEach((socketAddress, connectedPeer) -> {
+		    		  connectedPeer.getHandlerRef().tell(msg.pack(), getSelf());
 		    	  });
 	          })
 		      .match(MessagePack.class, msg -> {

@@ -58,7 +58,7 @@ public class ProduceTask implements Runnable {
 		    	 }else if(produceState instanceof TimeMissed) {
 		    		 TimeMissed timeMissed = (TimeMissed)produceState;
 		    		 log.debug("missed, this produce time:"+ timeMissed.getThisProduceTime()+", current time:"+timeMissed.getCurrTime());
-		    	 }else if(produceState instanceof TimeMissed) {
+		    	 }else if(produceState instanceof NotMyTurn) {
 		    		 NotMyTurn notMyTurn = (NotMyTurn)produceState;
 		    		 log.debug("not my turn, ("+notMyTurn.getProducer()+")");
 		    	 }else if(produceState instanceof Failed) {

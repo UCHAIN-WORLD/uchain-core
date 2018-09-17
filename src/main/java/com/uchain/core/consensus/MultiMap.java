@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class MultiMap<K,V> implements Iterable<Object>{
@@ -26,10 +27,13 @@ public class MultiMap<K,V> implements Iterable<Object>{
 	}
 
 	public void put(K k,V v) {
-		if(!container.containsKey(k)) {
-			container.put(k, new ArrayList<V>());
+		if (!container.containsKey(k)) {
+			List<V> list = Lists.newArrayList();
+			list.add(v);
+			container.put(k, list);
+		} else {
+			container.get(k).add(v);
 		}
-		container.get(k).add(v);
 	}
 	
 	public List<V> remove(K k) {
