@@ -11,23 +11,15 @@ public class TreeMapTest {
 		SortedMultiMap1 sortedMultiMap1 = new SortedMultiMap1("reverse");
 		sortedMultiMap1.put("2", "aa");
 		sortedMultiMap1.put("2", "bb");
-		sortedMultiMap1.put("8", "cc");
+		sortedMultiMap1.put("2", "cc");
 		sortedMultiMap1.put("7", "dd");
 		
-		SortedMultiMap1Iterator sortedMultiMap1Iterator = sortedMultiMap1.iterator();
 		
+		SortedMultiMap1Iterator sortedMultiMap1Iterator = sortedMultiMap1.iterator();
 		while(sortedMultiMap1Iterator.hasNext()) {
-			sortedMultiMap1Iterator.next();
-//			Set a = sortedMultiMap1Iterator.next().keySet();
-//			for (Integer key : sortedMultiMap1Iterator.next().keySet()) { 
-//				  System.out.println("Key = " + key); 
-//				} 
+			TwoTuple<String, String> a = sortedMultiMap1Iterator.next();
+			System.out.println(a.first+":"+a.second);
 		}
-//		sortedMultiMap1.head();
-//		sortedMultiMap1.nextIt();
-//		sortedMultiMap1.head();
-//		sortedMultiMap1.head();
-//		System.out.println(sortedMultiMap1);
 		
 		
 //		Map map = new HashMap();       //定义Map对象

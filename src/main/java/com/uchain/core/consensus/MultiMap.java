@@ -1,17 +1,18 @@
 package com.uchain.core.consensus;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MultiMap<K,V>{
-	private Map<K, List<V>> container = new HashMap<K, List<V>>();
+import com.google.common.collect.Maps;
+
+public class MultiMap<K,V> implements Iterable<Object>{
+	private Map<K, List<V>> container = Maps.newHashMap();
 	
 	public int size() {
 		int sizeBig = 0;
 		for (Map.Entry<K, List<V>> entry : container.entrySet()) {
-			sizeBig = sizeBig + entry.getValue().size();
+			sizeBig += entry.getValue().size();
 		}
 		return sizeBig;
 	}
@@ -35,7 +36,7 @@ public class MultiMap<K,V>{
 		return container.remove(k);
 	}
 
-	public Map<K, List<V>> head() {
+	public Map<K, V> head() {
 		return iterator().next();
 	}
     public MultiMapIterator<K,V> iterator() {

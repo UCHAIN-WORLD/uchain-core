@@ -9,9 +9,9 @@ public class SortedMultiMap2<K1,K2,V> implements Iterable<Object>{
 	private String sortedMultiMap1SortType;
 	public SortedMultiMap2(String sortType,String sortedMultiMap1SortType) {
 		if ("reverse".equals(sortType)) {
-			this.container = new TreeMap<K1,SortedMultiMap1<K2,V>>();
+			this.container = new TreeMap<K1,SortedMultiMap1<K2,V>>(new MapKeyComparatorReverse<K1>());
 		} else {
-			this.container = new TreeMap<K1,SortedMultiMap1<K2,V>>();
+			this.container = new TreeMap<K1,SortedMultiMap1<K2,V>>(new MapKeyComparator<K1>());
 		}
 		this.sortedMultiMap1SortType = sortedMultiMap1SortType;
 	}

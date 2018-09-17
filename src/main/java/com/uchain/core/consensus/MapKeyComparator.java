@@ -18,9 +18,9 @@ class MapKeyComparator<K> implements Comparator<K>{
 		    String s2 = (String) k2;
 		    return s1.compareTo(s2);
 		}else if (k1 instanceof Boolean) {
-		    boolean b1 = ((Boolean) k1).booleanValue();
-		    boolean b2 = ((Boolean) k2).booleanValue();
-		    
+		    Boolean b1 = ((Boolean) k1).booleanValue();
+		    Boolean b2 = ((Boolean) k2).booleanValue();
+		    return b1.compareTo(b2);
 		}
 		return 0;
 	}

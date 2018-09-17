@@ -31,7 +31,7 @@ public class ForkBase {
 	private Map<UInt256, ForkItem> indexById = new HashMap<UInt256, ForkItem>();
 	private MultiMap<UInt256, UInt256> indexByPrev = new MultiMap<UInt256, UInt256>();		  
 	private SortedMultiMap2<Integer,Boolean,UInt256> indexByHeight = new SortedMultiMap2<Integer,Boolean,UInt256>("asc","reverse");
-	private SortedMultiMap2<Integer,Integer,UInt256> indexByConfirmedHeight = new SortedMultiMap2<Integer,Integer,UInt256>("reverse","reverse");
+	private SortedMultiMap2<String,String,UInt256> indexByConfirmedHeight = new SortedMultiMap2<String,String,UInt256>("reverse","reverse");
 	
 	
 	public ForkBase(Settings settings) {
@@ -290,7 +290,7 @@ public class ForkBase {
 		indexById.put(blk.id(), item);
 		indexByPrev.put(blk.prev(), blk.id());
 		indexByHeight.put(blk.height(), item.isMaster(), blk.id());
-		indexByConfirmedHeight.put(item.confirmedHeight(), blk.height(), blk.id());
+		indexByConfirmedHeight.put(item.confirmedHeight()+"", blk.height()+"", blk.id());
 	}
 	
 	private void deleteIndex(ForkItem item) {
@@ -298,6 +298,6 @@ public class ForkBase {
 		indexById.remove(blk.id());
 		indexByPrev.remove(blk.prev());
 		indexByHeight.remove(blk.height(), item.isMaster());
-	    indexByConfirmedHeight.remove(item.confirmedHeight(), blk.height());
+	    indexByConfirmedHeight.remove(item.confirmedHeight()+"", blk.height()+"");
 	}
 }

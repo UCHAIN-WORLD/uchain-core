@@ -19,7 +19,7 @@ public class SortedMultiMap1<K, V> {
 	public int size() {
 		int sizeBig = 0;
 		for (Map.Entry<K, List<V>> entry : container.entrySet()) {
-			sizeBig = sizeBig + entry.getValue().size();
+			sizeBig += entry.getValue().size();
 		}
 		return sizeBig;
 	}
@@ -33,11 +33,8 @@ public class SortedMultiMap1<K, V> {
 	}
 
 	public void put(K k, V v) {
-		List<V> list = null;
 		if (!container.containsKey(k)) {
-			list = new ArrayList<V>();
-			list.add(v);
-			container.put(k, list);
+			container.put(k, new ArrayList<V>());
 		} else {
 			container.get(k).add(v);
 		}
