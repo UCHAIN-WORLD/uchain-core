@@ -60,11 +60,31 @@ public class LevelDBBlockChain implements BlockChain{
 	private static final Logger log = LoggerFactory.getLogger(ForkBase.class);
     private LevelDbStorage db;
     private Settings settings;
-    ForkBase forkBase = new ForkBase(settings);
+    private ForkBase forkBase;
     
+    private BinaryData genesisProducer;
+    private PrivateKey genesisProducerPrivKey;
+    
+    private HeaderStore headerStore;
+    private HeightStore heightStore;
+    private TransactionStore txStore;
+    private AccountStore accountStore;
+    private BlkTxMappingStore blkTxMappingStore;
+    private HeadBlockStore headBlkStore;
+    private NameToAccountStore nameToAccountStore;
+    private ProducerStateStore prodStateStore;
+    private BinaryData minerCoinFrom;
+    private Fixed8 minerAward;
+    private UInt160 genesisMinerAddress;
+    private Transaction genesisTx;
+    private BlockHeader genesisBlockHeader;
+    private Block genesisBlock;
+    private BlockHeader latestHeader;
+    private ProducerStatus latestProdState;
     LevelDBBlockChain(Settings settings){
     	this.db = ConnFacory.getInstance(settings.getChainSettings().getChain_dbDir());
     	this.settings = settings;
+    	forkBase = new ForkBase(settings);
         HeadBlock headBlockStore = headBlkStore.get();
         if(headBlockStore == null) reInit();
         else init(headBlockStore);
@@ -79,51 +99,46 @@ public class LevelDBBlockChain implements BlockChain{
     		});
     		db.BatchWrite(batch);
         }
+        
+        genesisProducer = new BinaryData(settings.getChainSettings().getChain_genesis_publicKey()); // TODO: read from settings
+        genesisProducerPrivKey = new PrivateKey(Scalar.apply(new BinaryData(settings.getChainSettings().getChain_genesis_privateKey())));
+
+        headerStore = new HeaderStore(db, 10, DataStoreConstant.HeaderPrefix,
+                new UInt256Key(), new BlockHeaderValue());
+        heightStore = new HeightStore(db, 10, DataStoreConstant.HeightToIdIndexPrefix,
+                new IntKey(), new UInt256Value());
+        txStore = new TransactionStore(db, 10, DataStoreConstant.TxPrefix,
+                new UInt256Key(), new TransactionValue());
+        accountStore = new AccountStore(db, 10, DataStoreConstant.AccountPrefix,
+                new UInt160Key(), new AccountValue());
+        blkTxMappingStore = new BlkTxMappingStore(db, 10,
+                DataStoreConstant.BlockIdToTxIdIndexPrefix, new UInt256Key(), new BlkTxMappingValue());
+        headBlkStore = new HeadBlockStore(db, DataStoreConstant.HeadBlockStatePrefix,
+                new HeadBlockValue());
+        nameToAccountStore = new NameToAccountStore(db, 10,
+                DataStoreConstant.NameToAccountIndexPrefix,new StringKey(),new UInt160Key());
+        prodStateStore = new ProducerStateStore(db,  DataStoreConstant.ProducerStatePrefix,
+                new ProducerStatusValue());
+        
+        // TODO: folkBase is todo
+        // TODO: zero is not a valid pub key, need to work out other method
+        minerCoinFrom = new BinaryData(settings.getChainSettings().getChain_miner());   // 33 bytes pub key
+        minerAward = Fixed8.Ten;
+        
+        genesisMinerAddress = UInt160.parse("f54a5851e9372b87810a8e60cdd2e7cfd80b6e31");
+        genesisTx = new Transaction(TransactionType.Miner, minerCoinFrom,
+                genesisMinerAddress, "", minerAward, UInt256.Zero(), 0L,
+                CryptoUtil.array2binaryData(BinaryData.empty),CryptoUtil.array2binaryData(BinaryData.empty));
+
+        genesisBlockHeader =  BlockHeader.build(0, settings.getChainSettings().getChain_genesis_timeStamp(),
+                UInt256.Zero(), UInt256.Zero(), genesisProducer, genesisProducerPrivKey);
+
+        genesisBlock = new Block(genesisBlockHeader,Transaction.transactionToArrayList(genesisTx));
+
+        latestHeader= genesisBlockHeader;
     }
 
-    private BinaryData genesisProducer = new BinaryData(settings.getChainSettings().getChain_genesis_publicKey()); // TODO: read from settings
-    private PrivateKey genesisProducerPrivKey = new PrivateKey(Scalar.apply(new BinaryData(settings.getChainSettings().getChain_genesis_privateKey())));
-
-    private HeaderStore headerStore = new HeaderStore(db, 10, DataStoreConstant.HeaderPrefix,
-            new UInt256Key(), new BlockHeaderValue());
-    private HeightStore heightStore = new HeightStore(db, 10, DataStoreConstant.HeightToIdIndexPrefix,
-            new IntKey(), new UInt256Value());
-    private TransactionStore txStore = new TransactionStore(db, 10, DataStoreConstant.TxPrefix,
-            new UInt256Key(), new TransactionValue());
-    private AccountStore accountStore = new AccountStore(db, 10, DataStoreConstant.AccountPrefix,
-            new UInt160Key(), new AccountValue());
-    //  private val addressStore = new AddressStore(db)
-    private BlkTxMappingStore blkTxMappingStore = new BlkTxMappingStore(db, 10,
-            DataStoreConstant.BlockIdToTxIdIndexPrefix, new UInt256Key(), new BlkTxMappingValue());
-
-    private HeadBlockStore headBlkStore = new HeadBlockStore(db, DataStoreConstant.HeadBlockStatePrefix,
-            new HeadBlockValue());
-    //private val utxoStore = new UTXOStore(db, 10)
-    private NameToAccountStore nameToAccountStore = new NameToAccountStore(db, 10,
-            DataStoreConstant.NameToAccountIndexPrefix,new StringKey(),new UInt160Key());
-    // TODO:  pubkeyNonceStore
-    private ProducerStateStore prodStateStore = new ProducerStateStore(db,  DataStoreConstant.ProducerStatePrefix,
-            new ProducerStatusValue());
-
-
-    // TODO: folkBase is todo
-    // TODO: zero is not a valid pub key, need to work out other method
-    private BinaryData minerCoinFrom = new BinaryData(settings.getChainSettings().getChain_miner());   // 33 bytes pub key
-    private Fixed8 minerAward = Fixed8.Ten;
-
-    private UInt160 genesisMinerAddress = UInt160.parse("f54a5851e9372b87810a8e60cdd2e7cfd80b6e31");
-    private Transaction genesisTx = new Transaction(TransactionType.Miner, minerCoinFrom,
-            genesisMinerAddress, "", minerAward, UInt256.Zero(), 0L,
-            CryptoUtil.array2binaryData(BinaryData.empty),CryptoUtil.array2binaryData(BinaryData.empty));
-
-    private BlockHeader genesisBlockHeader =  BlockHeader.build(0, settings.getChainSettings().getChain_genesis_timeStamp(),
-            UInt256.Zero(), UInt256.Zero(), genesisProducer, genesisProducerPrivKey);
-
-    private Block genesisBlock = new Block(genesisBlockHeader,Transaction.transactionToArrayList(genesisTx));
-
-    private BlockHeader latestHeader= genesisBlockHeader;
-
-    private ProducerStatus latestProdState = null;
+    
 
     @Override
     public String getGenesisBlockChainId(){
