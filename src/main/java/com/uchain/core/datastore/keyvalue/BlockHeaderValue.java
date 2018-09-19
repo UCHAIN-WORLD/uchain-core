@@ -1,19 +1,21 @@
 package com.uchain.core.datastore.keyvalue;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
+import java.io.*;
 
 import com.uchain.common.Serializabler;
 import com.uchain.core.BlockHeader;
 
+import com.uchain.crypto.UInt256;
 import lombok.val;
 
 public class BlockHeaderValue implements Converter<BlockHeader>{
 
 	@Override
 	public byte[] toBytes(BlockHeader key) {
-		return Serializabler.toBytes(key);
+		val bs = new ByteArrayOutputStream();
+		val os = new DataOutputStream(bs);
+		serializer(key,os);
+		return bs.toByteArray();
 	}
 
 	@Override
@@ -26,6 +28,21 @@ public class BlockHeaderValue implements Converter<BlockHeader>{
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	@Override
+	public BlockHeader deserializer(DataInputStream is) {
+		try {
+			return BlockHeader.deserialize(is);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	@Override
+	public void serializer(BlockHeader key, DataOutputStream os) {
+		key.serialize(os);
 	}
 
 }

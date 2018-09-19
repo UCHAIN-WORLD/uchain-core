@@ -81,13 +81,18 @@ public class Account implements Identifier<UInt160> {
 		return UInt160.fromBytes(Crypto.hash160(bs.toByteArray()));
 	}
 
-	public static Account deserialize(DataInputStream is) throws IOException {
-		 val version = is.readInt();
-		 val active = is.readBoolean();
-		 val name = Serializabler.readString(is);
-		 Map<UInt256, Fixed8> balances = readMap(is);
-		 val nextNonce = is.readLong();
-		 return new Account(active,name,balances,nextNonce/*,version*//*,id*/);
+	public static Account deserialize(DataInputStream is) {
+		try {
+			val version = is.readInt();
+			val active = is.readBoolean();
+			val name = Serializabler.readString(is);
+			Map<UInt256, Fixed8> balances = readMap(is);
+			val nextNonce = is.readLong();
+			return new Account(active,name,balances,nextNonce/*,version*//*,id*/);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	public static Map<UInt256, Fixed8> readMap(DataInputStream is) throws IOException {

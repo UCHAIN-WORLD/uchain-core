@@ -158,20 +158,25 @@ public class Transaction implements Identifier<UInt256> {
 		return json;
 	}
 
-	public static Transaction deserialize(DataInputStream is) throws IOException {
-		val txType = TransactionType.getTransactionTypeByValue(is.readByte());
-		val version = is.readInt();
-		val from = CryptoUtil.array2binaryData(Serializabler.readByteArray(is));
-		val toPubKeyHash = UInt160.deserialize(is);
-		val toName = Serializabler.readString(is);
-		val amount = Fixed8.deserialize(is);
-		UInt256 assetId = UInt256.deserialize(is);
-		val nonce = is.readLong();
-		val data = CryptoUtil.array2binaryData(Serializabler.readByteArray(is));
-		val signature = CryptoUtil.array2binaryData(Serializabler.readByteArray(is));
+	public static Transaction deserialize(DataInputStream is) {
+		try {
+			val txType = TransactionType.getTransactionTypeByValue(is.readByte());
+			val version = is.readInt();
+			val from = CryptoUtil.array2binaryData(Serializabler.readByteArray(is));
+			val toPubKeyHash = UInt160.deserialize(is);
+			val toName = Serializabler.readString(is);
+			val amount = Fixed8.deserialize(is);
+			UInt256 assetId = UInt256.deserialize(is);
+			val nonce = is.readLong();
+			val data = CryptoUtil.array2binaryData(Serializabler.readByteArray(is));
+			val signature = CryptoUtil.array2binaryData(Serializabler.readByteArray(is));
 //		val id = UInt256Util.deserialize(is);
-		return new Transaction(txType, from, toPubKeyHash, toName, amount, assetId, nonce, data, signature/*, version,
-				id*/);
+			return new Transaction(txType, from, toPubKeyHash, toName, amount, assetId, nonce, data, signature/*, version,
+					id*/);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 

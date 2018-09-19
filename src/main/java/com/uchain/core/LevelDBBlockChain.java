@@ -62,7 +62,7 @@ public class LevelDBBlockChain implements BlockChain{
     private Settings settings;
     private ForkBase forkBase;
     
-    private BinaryData genesisProducer;
+    private PublicKey genesisProducer;
     private PrivateKey genesisProducerPrivKey;
     
     private HeaderStore headerStore;
@@ -85,22 +85,7 @@ public class LevelDBBlockChain implements BlockChain{
     	this.db = ConnFacory.getInstance(settings.getChainSettings().getChain_dbDir());
     	this.settings = settings;
     	forkBase = new ForkBase(settings);
-        HeadBlock headBlockStore = headBlkStore.get();
-        if(headBlockStore == null) reInit();
-        else init(headBlockStore);
-        
-        if (forkBase.head() == null) {
-        	TwoTuple<List<ForkItem>,Boolean> twoTuple = forkBase.add(genesisBlock);
-        	List<ForkItem> saveBlocks = twoTuple.first;
-        	WriteBatch batch = db.getBatchWrite();
-        	saveBlocks.forEach(item -> {
-        		onConfirmed(item.getBlock());
-				batch.delete(Serializabler.toBytes(item.getBlock().id()));
-    		});
-    		db.BatchWrite(batch);
-        }
-        
-        genesisProducer = new BinaryData(settings.getChainSettings().getChain_genesis_publicKey()); // TODO: read from settings
+        genesisProducer = PublicKey.apply(new BinaryData(settings.getChainSettings().getChain_genesis_publicKey())); // TODO: read from settings
         genesisProducerPrivKey = new PrivateKey(Scalar.apply(new BinaryData(settings.getChainSettings().getChain_genesis_privateKey())));
 
         headerStore = new HeaderStore(db, 10, DataStoreConstant.HeaderPrefix,
@@ -119,12 +104,12 @@ public class LevelDBBlockChain implements BlockChain{
                 DataStoreConstant.NameToAccountIndexPrefix,new StringKey(),new UInt160Key());
         prodStateStore = new ProducerStateStore(db,  DataStoreConstant.ProducerStatePrefix,
                 new ProducerStatusValue());
-        
+
         // TODO: folkBase is todo
         // TODO: zero is not a valid pub key, need to work out other method
         minerCoinFrom = new BinaryData(settings.getChainSettings().getChain_miner());   // 33 bytes pub key
         minerAward = Fixed8.Ten;
-        
+
         genesisMinerAddress = UInt160.parse("f54a5851e9372b87810a8e60cdd2e7cfd80b6e31");
         genesisTx = new Transaction(TransactionType.Miner, minerCoinFrom,
                 genesisMinerAddress, "", minerAward, UInt256.Zero(), 0L,
@@ -136,6 +121,25 @@ public class LevelDBBlockChain implements BlockChain{
         genesisBlock = new Block(genesisBlockHeader,Transaction.transactionToArrayList(genesisTx));
 
         latestHeader= genesisBlockHeader;
+
+        HeadBlock headBlockStore = headBlkStore.get();
+        if(headBlockStore == null)
+            latestHeader = reInit();
+        else
+            latestHeader = init(headBlockStore);
+
+        if (forkBase.head() == null) {
+            TwoTuple<List<ForkItem>,Boolean> twoTuple = forkBase.add(genesisBlock);
+            if(twoTuple != null) {
+                List<ForkItem> saveBlocks = twoTuple.first;
+                WriteBatch batch = db.getBatchWrite();
+                saveBlocks.forEach(item -> {
+                    onConfirmed(item.getBlock());
+                    batch.delete(Serializabler.toBytes(item.getBlock().id()));
+                });
+                db.BatchWrite(batch);
+            }
+        }
     }
 
     
@@ -266,7 +270,7 @@ public class LevelDBBlockChain implements BlockChain{
         val txs = getUpdateTransaction(minerTx, transactions);
         val merkleRoot = MerkleTree.root(transactions.stream().map(v -> v.id()).collect(Collectors.toList()));
         val header = BlockHeader.build(latestHeader.getIndex() + 1, timeStamp, merkleRoot,
-                latestHeader.id(), producer.toBin(), privateKey);
+                latestHeader.id(), producer, privateKey);
         val block = new Block(header, txs);
         TwoTuple<List<ForkItem>,Boolean> twoTuple = forkBase.add(genesisBlock);
 		if (twoTuple.second) {
@@ -433,7 +437,7 @@ public class LevelDBBlockChain implements BlockChain{
             return false;
         if (!header.getPrevBlock().equals(latestHeader.id()))
             return false;
-        if (header.getProducer().getLength() != 33)
+        if (header.getProducer().toBin().getLength() != 33)
             return false;
         if (!header.verifySig())
             return false;

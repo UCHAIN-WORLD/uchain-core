@@ -23,8 +23,15 @@ public class HeadBlock implements Serializable{
 		this.id = id;
 	}
 
-	public static HeadBlock deserialize(DataInputStream is) throws IOException {
-		return new HeadBlock(is.readInt(), UInt256.deserialize(is));
+	public static HeadBlock deserialize(DataInputStream is) {
+		int height = 0;
+		try {
+			height = is.readInt();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		HeadBlock headBlock = new HeadBlock(height, UInt256.deserialize(is));
+		return headBlock;
 	}
 
 	public static ArrayList<UInt256> readSeq(DataInputStream is) throws IOException {

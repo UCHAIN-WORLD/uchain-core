@@ -1,30 +1,36 @@
 package com.uchain.core.datastore.keyvalue;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
+import java.io.*;
 
 import com.uchain.common.Serializabler;
 
 import lombok.val;
 
-public class HeadBlockValue implements Converter<HeadBlock>{
+public class HeadBlockValue implements Converter<HeadBlock> {
 
-	@Override
-	public byte[] toBytes(HeadBlock key) {
-		return Serializabler.toBytes(key);
-	}
+    @Override
+    public byte[] toBytes(HeadBlock key) {
+        val bs = new ByteArrayOutputStream();
+        val os = new DataOutputStream(bs);
+        serializer(key,os);
+        return bs.toByteArray();
+    }
 
-	@Override
-	public HeadBlock fromBytes(byte[] bytes) {
-		val bs = new ByteArrayInputStream(bytes);
-		val is = new DataInputStream(bs);
-		try {
-			return HeadBlock.deserialize(is);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
+    @Override
+    public HeadBlock fromBytes(byte[] bytes) {
+        val bs = new ByteArrayInputStream(bytes);
+        val is = new DataInputStream(bs);
+        return HeadBlock.deserialize(is);
+    }
+
+    @Override
+    public HeadBlock deserializer(DataInputStream is) {
+        return HeadBlock.deserialize(is);
+    }
+
+    @Override
+    public void serializer(HeadBlock key, DataOutputStream os) {
+        key.serialize(os);
+    }
 
 }

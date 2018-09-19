@@ -35,7 +35,7 @@ public class Block implements Identifier<UInt160>{
     }
 
     public UInt256 id(){
-        return header.get_id();
+        return header.id();
     }
 
     public int height(){

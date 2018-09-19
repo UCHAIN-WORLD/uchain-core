@@ -17,8 +17,14 @@ public class ProducerStatus implements Serializable{
 		this.distance = distance;
 	}
 
-	public static ProducerStatus deserialize(DataInputStream is) throws IOException {
-		return new ProducerStatus(is.readLong());
+	public static ProducerStatus deserialize(DataInputStream is) {
+		ProducerStatus producerStatus = null;
+		try {
+			producerStatus = new ProducerStatus(is.readLong());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return producerStatus;
 	}
 
 	@Override

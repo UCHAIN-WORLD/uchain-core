@@ -23,9 +23,9 @@ abstract class StateStore<T> {
 		if (cached == null) {
 			val bytes = db.get(prefixBytes);
 			if (!(bytes == null)) {
-				return null;
-			} else {
 				cached = (T) valConverter.fromBytes(bytes);
+			} else {
+				return null;
 			}
 		} 
 		return cached;

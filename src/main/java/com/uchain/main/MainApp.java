@@ -13,7 +13,7 @@ import akka.actor.ActorSystem;
 
 public class MainApp {
 	public static void main(String[] args) throws IOException {
-		Settings settings = new Settings("config");
+		Settings settings = new Settings("config2");
 //		UPnP upnp = new UPnP(settings);
 
 		ActorSystem peerHandlerManagerSystem = ActorSystem.create("peerHandlerManagerSystem");

@@ -31,12 +31,16 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@AllArgsConstructor
+//@AllArgsConstructor
 public class Node extends AbstractActor{
 	Logger log = LoggerFactory.getLogger(Node.class);
 	private BlockChain chain;
 	private ActorRef peerHandlerManager;
-	
+
+	public Node(BlockChain chain, ActorRef peerHandlerManager) {
+		this.chain = chain;
+		this.peerHandlerManager = peerHandlerManager;
+	}
 	public static Props props(BlockChain chain, ActorRef peerHandlerManager) {
 		return Props.create(Node.class, chain, peerHandlerManager);
 	}

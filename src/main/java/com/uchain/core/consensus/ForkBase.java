@@ -103,9 +103,9 @@ public class ForkBase {
 	}
 	
 	private TwoTuple<List<ForkItem>,Boolean> addItem(Block block,Map<PublicKey, Integer> lph) {
-		BinaryData pub = block.getHeader().getProducer();
-		if(lph.containsKey(PublicKey.apply(pub))) {
-			lph.put(PublicKey.apply(pub), block.height());
+		PublicKey pub = block.getHeader().getProducer();
+		if(lph.containsKey(pub)) {
+			lph.put(pub, block.height());
 		}
 		TwoTuple<List<ForkItem>,Boolean> twoTuple = add(new ForkItem(block, lph,false));
 		return twoTuple;
@@ -130,9 +130,9 @@ public class ForkBase {
 			}else if(!item.getBlock().id().equals(oldHead.getBlock().id())) {
 				switchAdd(oldHead, item);
 			}
-			new TwoTuple<List<ForkItem>,Boolean>(saveBlocks,true);
+			twoTuple = new TwoTuple<List<ForkItem>,Boolean>(saveBlocks,true);
 		}else {
-			new TwoTuple<List<ForkItem>,Boolean>(saveBlocks,false);
+			twoTuple =new TwoTuple<List<ForkItem>,Boolean>(saveBlocks,false);
 		}
 		return twoTuple;
 	}
@@ -186,7 +186,7 @@ public class ForkBase {
 			ThreeTuple<Integer,Boolean,UInt256> p = iterator.next();
 			if(p.first < height) {
 				ForkItem item = indexById.get(p.third);
-				if(item == null) {
+				if(item.isMaster()) {
 					items.add(item);
 				}
 			}
