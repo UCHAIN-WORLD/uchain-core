@@ -46,13 +46,13 @@ public class PublicKey implements Serializable {
     }
 
     public byte[] hash160() {
-         return Crypto.hash160(CryptoUtil.listTobyte(new PublicKey().toBin().getData()));
+         return Crypto.hash160(CryptoUtil.listTobyte(toBin().getData()));
     }
 
-    @Override
-    public String toString() {
-        return new PublicKey().getPoint().toString();
-    }
+//    @Override
+//    public String toString() {
+//        return new PublicKey().getPoint().toString();
+//    }
 
 //    public String toAddress() {
 //    	return PublicKeyHash.toAddress(hash);

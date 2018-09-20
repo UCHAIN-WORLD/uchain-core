@@ -57,7 +57,7 @@ import lombok.val;
 @Getter
 @Setter
 public class LevelDBBlockChain implements BlockChain{
-	private static final Logger log = LoggerFactory.getLogger(ForkBase.class);
+	private static final Logger log = LoggerFactory.getLogger(LevelDBBlockChain.class);
     private LevelDbStorage db;
     private Settings settings;
     private ForkBase forkBase;
@@ -268,11 +268,11 @@ public class LevelDBBlockChain implements BlockChain{
                 producer.pubKeyHash(), "", minerAward, UInt256.Zero(), new Long((long)(latestHeader.getIndex() + 1)),
                 CryptoUtil.array2binaryData(BinaryData.empty), CryptoUtil.array2binaryData(BinaryData.empty));
         val txs = getUpdateTransaction(minerTx, transactions);
-        val merkleRoot = MerkleTree.root(transactions.stream().map(v -> v.id()).collect(Collectors.toList()));
+        val merkleRoot = MerkleTree.root(txs.stream().map(v -> v.id()).collect(Collectors.toList()));
         val header = BlockHeader.build(latestHeader.getIndex() + 1, timeStamp, merkleRoot,
                 latestHeader.id(), producer, privateKey);
         val block = new Block(header, txs);
-        TwoTuple<List<ForkItem>,Boolean> twoTuple = forkBase.add(genesisBlock);
+        TwoTuple<List<ForkItem>,Boolean> twoTuple = forkBase.add(block);
 		if (twoTuple.second) {
 			return block;
 		} else {

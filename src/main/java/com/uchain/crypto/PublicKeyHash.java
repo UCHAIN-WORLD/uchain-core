@@ -4,7 +4,7 @@ public class PublicKeyHash {
 
 	public static String toAddress(byte[] hash) {
 		if (hash.length == 20) {
-			Base58Check.encode(CryptoUtil.binaryData2array(CryptoUtil.fromHexString("0548")), hash);
+			return Base58Check.encode(CryptoUtil.binaryData2array(CryptoUtil.fromHexString("0548")), hash);
 		}
 		throw new IllegalArgumentException();
 	}

@@ -1,11 +1,13 @@
 package com.uchain.core.consensus;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.uchain.crypto.Crypto;
 import org.iq80.leveldb.WriteBatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,8 +87,9 @@ public class ForkBase {
 		TwoTuple<List<ForkItem>,Boolean> twoTuple = null;
 		Map<PublicKey, Integer> lph = new HashMap<PublicKey, Integer>();
 		if(_head == null) {
+			log.info("启动项目时，加入所有见证人");
 			List<Witness> witnesses = settings.getConsensusSettings().getWitnessList();
-			for(Witness witness : witnesses) {
+			for(Witness witness : witnesses) {//map中放入所有见证人
 				lph.put(PublicKey.apply(new BinaryData(witness.getPubkey())), 0);
 			}
 			twoTuple = addItem(block,lph);
@@ -155,6 +158,7 @@ public class ForkBase {
 		items.forEach(item -> {
 			indexById.put(item.getBlock().id(), item);
 		});
+        items.forEach(item -> updateIndex(item));
 	}
 	
 	/**
@@ -300,4 +304,36 @@ public class ForkBase {
 		indexByHeight.remove(blk.height(), item.isMaster());
 	    indexByConfirmedHeight.remove(item.confirmedHeight(), blk.height());
 	}
+
+
+	private void updateIndex(ForkItem newItem) {
+		UInt256 id = newItem.getBlock().id();
+		int height = newItem.getBlock().height();
+		boolean branch = newItem.isMaster();
+		List<UInt256> list = indexByHeight.remove(height, !branch);
+		if(list != null) {
+			for (UInt256 u : list) {
+				if (!u.equals(id)) {
+					indexByHeight.put(height, branch, u);
+				}
+			}
+		}
+        indexByHeight.put(height, branch, id);
+		indexById.put(id, newItem);
+	}
+
+    public static void main(String[] args) {
+        Map<UInt256, String> indexById = new HashMap<>();
+        indexById.put(UInt256.Zero(), "a");
+        System.out.println(indexById.containsKey(UInt256.Zero()));
+
+
+        try {
+            UInt256 key = UInt256.fromBytes(Crypto.hash256(("test").getBytes("UTF-8")));
+            indexById.put(key, "a");
+            System.out.println(indexById.containsKey(key));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+    }
 }

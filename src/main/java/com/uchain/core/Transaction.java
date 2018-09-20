@@ -37,7 +37,7 @@ public class Transaction implements Identifier<UInt256> {
 	private BinaryData data;// 具体数据
 	private BinaryData signature;//签名
 	private int version = 0x01;
-	private UInt256 _id = null;
+	private UInt256 id = null;
 
 	public Transaction(TransactionType txType, BinaryData from, UInt160 toPubKeyHash, String toName, Fixed8 amount,
 			UInt256 assetId, Long nonce, BinaryData data, BinaryData signature/*, int version, UInt256 _id*/) {
@@ -137,14 +137,14 @@ public class Transaction implements Identifier<UInt256> {
 
 	@Override
 	public UInt256 id() {
-		if (_id == null) {
-			_id = genId();
+		if (id == null) {
+			id = genId();
 		}
-		return _id;
+		return id;
 	}
 
 	public static String writes(Transaction o) {
-		TransactionJson transaction = new TransactionJson(o._id.toString(),
+		TransactionJson transaction = new TransactionJson(o.id().toString(),
 				TransactionType.getTransactionTypeStringByType(o.txType), o.fromAddress(),
 				o.toAddress(), o.toName, o.amount.toString(), o.assetId.toString(), o.nonce.toString(),
 				CryptoUtil.toHexString(o.data), CryptoUtil.toHexString(o.signature), String.valueOf(o.version));

@@ -42,7 +42,12 @@ public class PrivateKey {
     }
 
     public static PrivateKey apply(BinaryData data, boolean compressed) {
-        return new PrivateKey(Scalar.apply(new BinaryData(data.getData().subList(0, 33))), compressed);
+        if(compressed){
+            return new PrivateKey(Scalar.apply(new BinaryData(data.getData().subList(0, 33))), compressed);
+        }else{
+            return new PrivateKey(Scalar.apply(new BinaryData(data.getData().subList(0, 32))), compressed);
+        }
+
     }
 
     public PublicKey publicKey() {
@@ -68,8 +73,8 @@ public class PrivateKey {
         return "";
     }
 
-    @Override
-    public String toString() {
-        return toBin().getData().toString();
-    }
+//    @Override
+//    public String toString() {
+//        return toBin().getData().toString();
+//    }
 }

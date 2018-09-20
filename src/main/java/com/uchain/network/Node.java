@@ -31,7 +31,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-//@AllArgsConstructor
 public class Node extends AbstractActor{
 	Logger log = LoggerFactory.getLogger(Node.class);
 	private BlockChain chain;

@@ -37,7 +37,7 @@ public class UIntBase implements Serializable {
             return false;
         }
         UIntBase uIntBase = (UIntBase) obj;
-        return Objects.equals(data, uIntBase.data);
+        return Objects.equals(data, uIntBase.getData());
     }
 
     @Override

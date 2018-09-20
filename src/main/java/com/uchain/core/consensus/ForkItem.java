@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.uchain.common.Serializabler;
 import com.uchain.core.Block;
@@ -43,10 +44,7 @@ public class ForkItem {
 	public int confirmedHeight() {
 		if (_confirmedHeight == -1) {
 			int index = lastProducerHeight.size() * 2 / 3;
-			List<Integer> lastHeights = new ArrayList<Integer>();
-			for (Integer value : lastProducerHeight.values()) {
-				lastHeights.add(value);
-			}
+			List<Integer> lastHeights = lastProducerHeight.values().stream().collect(Collectors.toList());
 			Collections.sort(lastHeights, new Comparator<Integer>() {
 				public int compare(Integer o1, Integer o2) {
 					// 按照金额大小进行降序排列

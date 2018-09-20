@@ -3,12 +3,10 @@ package com.uchain.core.producer;
 import java.math.BigInteger;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import akka.io.Tcp;
+import com.google.common.collect.Lists;
 import com.uchain.core.Block;
 import com.uchain.core.BlockChain;
 import com.uchain.core.Transaction;
@@ -27,12 +25,19 @@ import com.uchain.main.Witness;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
+import com.uchain.network.message.*;
 
 public class Producer extends AbstractActor {
 
 	private ConsensusSettings settings;
 	private ActorRef peerManager;
 	private BlockChain chain;
+
+	public Producer(ConsensusSettings settings, BlockChain chain, ActorRef peerManager) {
+		this.settings = settings;
+		this.peerManager = peerManager;
+		this.chain = chain;
+	}
 
 	public static Props props(ConsensusSettings settings, BlockChain chain, ActorRef peerManager) {
 		return Props.create(Producer.class, settings, chain, peerManager);
@@ -81,12 +86,12 @@ public class Producer extends AbstractActor {
 			return new NotYet(next,now);
 		}else {
 		    Witness witness = getWitness(nextProduceTime(now, next));
-		    if(witness.getPrivkey() == null) {
+		    if("".equals(witness.getPrivkey())) {
 		    	return new NotMyTurn(witness.getName(), PublicKey.apply(new BinaryData(witness.getPubkey())));
 		    }else {
 				Collection<Transaction> valueCollection = txPool.values();
 				List<Transaction> txs = new ArrayList<Transaction>(valueCollection);
-				Block block = chain.produceBlock(PublicKey.apply(new BinaryData(witness.getPubkey())), 
+				Block block = chain.produceBlock(PublicKey.apply(new BinaryData(witness.getPubkey())),
 						PrivateKey.apply(new BinaryData(witness.getPrivkey())), nextProduceTime(now, next), txs);
 				return new Success(block, witness.getName(), now);
 		    }
@@ -164,7 +169,9 @@ public class Producer extends AbstractActor {
 
 	@Override
 	public Receive createReceive() {
-		return null;
+		return receiveBuilder().match(Object.class, msg -> {
+		}).build();
 	}
+
 
 }

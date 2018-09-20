@@ -6,6 +6,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import com.uchain.crypto.PublicKey;
 import org.junit.Test;
 
 import com.uchain.common.Serializabler;
@@ -21,7 +22,7 @@ public class BlockHeaderTest {
     public void testSerialize() throws IOException{
         val prevBlock = SerializerTest.testHash256("prev");
         val merkleRoot = SerializerTest.testHash256("root");
-        val producer = new BinaryData("03b4534b44d1da47e4b4a504a210401a583f860468dec766f507251a057594e682"); // TODO: read from settings
+        val producer = PublicKey.apply(new BinaryData("03b4534b44d1da47e4b4a504a210401a583f860468dec766f507251a057594e682"));
         val timeStamp = DateTime.now().clicks();
         val blockHeader = new BlockHeader(0, timeStamp, merkleRoot, prevBlock, producer, new BinaryData("0000")/*, 0x01, null*/);
 
@@ -45,7 +46,7 @@ public class BlockHeaderTest {
     public void test() throws IOException{
     	val prevBlock = SerializerTest.testHash256("prev");
         val merkleRoot = SerializerTest.testHash256("root");
-        val producer = new BinaryData("03b4534b44d1da47e4b4a504a210401a583f860468dec766f507251a057594e682"); 
+        val producer = PublicKey.apply(new BinaryData("03b4534b44d1da47e4b4a504a210401a583f860468dec766f507251a057594e682"));
         val timeStamp = DateTime.now().clicks();
         val blockHeader = new BlockHeader(0, timeStamp, merkleRoot, prevBlock, producer, new BinaryData("0000"));
         val bos = new ByteArrayOutputStream();
