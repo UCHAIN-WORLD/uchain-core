@@ -29,7 +29,7 @@ public class BlockHeader implements Identifier<UInt160> {
     private UInt256 id;
 
     public BlockHeader(int index, long timeStamp, UInt256 merkleRoot, UInt256 prevBlock, PublicKey producer,
-                       BinaryData producerSig/*, int version*/) {
+                       BinaryData producerSig, int version,UInt256 id) {
         this.index = index;
         this.timeStamp = timeStamp;
         this.merkleRoot = merkleRoot;
@@ -37,55 +37,26 @@ public class BlockHeader implements Identifier<UInt160> {
         this.producer = producer;
         this.producerSig = producerSig;
         this.version = 0x01;
+        this.id = id;
     }
 
-    // public BlockHeader (int index, long timeStamp, UInt256 merkleRoot, UInt256
-    // prevBlock,
-    // BinaryData producer, PrivateKey privateKey, int version, UInt256 _id){
-    // if(CryptoUtil.binaryData2array(producer).length == 33){
-    // this.index = index;
-    // this.timeStamp = timeStamp;
-    // this.merkleRoot = merkleRoot;
-    // this.prevBlock = prevBlock;
-    // this.producer = producer;
-    // this.producerSig = CryptoUtil.array2binaryData(BinaryData.empty);
-    // this.version = version;
-    // this._id = _id;
-    // sign(privateKey);
-    // }
-    // }
-    //
-    // public BlockHeader (int index, long timeStamp, UInt256 merkleRoot, UInt256
-    // prevBlock,
-    // BinaryData producer, BinaryData producerSig, int version, UInt256 _id){
-    // if(CryptoUtil.binaryData2array(producer).length == 33){
-    // this.index = index;
-    // this.timeStamp = timeStamp;
-    // this.merkleRoot = merkleRoot;
-    // this.prevBlock = prevBlock;
-    // this.producer = producer;
-    // this.producerSig = producerSig;
-    // this.version = version;
-    // this._id = _id;
-    // }
-    // }
 
-//	@Override
-//	public boolean equals(Object obj) {
-//		if (this == obj) {
-//			return true;
-//		}
-//		if (obj.getClass() == getClass()) {
-//			BlockHeader blk = (BlockHeader) obj;
-//			return blk.id() == id();
-//		}
-//		return false;
-//	}
-//
-//	@Override
-//	public int hashCode() {
-//		return id().hashCode();
-//	}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj.getClass() == getClass()) {
+			BlockHeader blk = (BlockHeader) obj;
+			return blk.id() == id();
+		}
+		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return id().hashCode();
+	}
 
 	@Override
 	public void serialize(DataOutputStream os) {
@@ -129,9 +100,8 @@ public class BlockHeader implements Identifier<UInt160> {
 		return bs.toByteArray();
 	}
 
-	public BinaryData sign(PrivateKey privKey) {
+	public void sign(PrivateKey privKey) {
 		producerSig = CryptoUtil.array2binaryData(Crypto.sign(getSigTargetData(), privKey));
-		return producerSig;
 	}
 
 	public boolean verifySig() {
@@ -151,7 +121,7 @@ public class BlockHeader implements Identifier<UInt160> {
 									PublicKey producer, PrivateKey privateKey) {
 		if (producer.toBin().getLength() == 33) {
 			BinaryData binaryData = CryptoUtil.seq2binaryData(new ArrayList<Byte>());
-			val header = new BlockHeader(index, timeStamp, merkleRoot, prevBlock, producer, binaryData);
+			val header = new BlockHeader(index, timeStamp, merkleRoot, prevBlock, producer, binaryData,0x01,null);
 			header.sign(privateKey);
 			return header;
 		} else {
@@ -167,7 +137,7 @@ public class BlockHeader implements Identifier<UInt160> {
 		UInt256 prevBlock = UInt256.deserialize(is);
 		PublicKey producer = PublicKey.deserialize(is);
 		BinaryData producerSig = CryptoUtil.array2binaryData(Serializabler.readByteArray(is));
-		return new BlockHeader(index, timeStamp, merkleRoot, prevBlock,producer,producerSig/*, version, UInt256Util.deserialize(is)*/);
+		return new BlockHeader(index, timeStamp, merkleRoot, prevBlock,producer,producerSig, version, UInt256.deserialize(is));
 	}
 
 	public static BlockHeader fromBytes(byte[] data) throws IOException {

@@ -7,16 +7,12 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import com.uchain.crypto.*;
 import org.junit.Test;
 
 import com.uchain.common.Serializabler;
 import com.uchain.core.Transaction;
 import com.uchain.core.TransactionType;
-import com.uchain.crypto.BinaryData;
-import com.uchain.crypto.Fixed8;
-import com.uchain.crypto.PrivateKey;
-import com.uchain.crypto.PublicKeyHash;
-import com.uchain.crypto.UInt256;
 
 import lombok.val;
 
@@ -26,10 +22,19 @@ public class TransactionTest {
 		PrivateKey privKey = PrivateKey
 				.apply(new BinaryData("d39d51a8d40336b0c73af180308fe0e4ee357e45a59e8afeebf6895ddf78aa2f"));
 
-		Transaction tx = new Transaction(TransactionType.Transfer,
-				new BinaryData("0345ffbf8dc9d8ff15785e2c228ac48d98d29b834c2e98fb8cfe6e71474d7f6322"),
-				PublicKeyHash.fromAddress("APGMmPKLYdtTNhiEkDGU6De8gNCk3bTsME9"), "bob", Fixed8.Ten, UInt256.Zero(),
-				1L, new BinaryData("1234"), new BinaryData(new ArrayList<>()));
+//		Transaction tx = new Transaction(TransactionType.Transfer,
+//				PublicKey.apply(new BinaryData("0345ffbf8dc9d8ff15785e2c228ac48d98d29b834c2e98fb8cfe6e71474d7f6322")),
+//				PublicKeyHash.fromAddress("APGMmPKLYdtTNhiEkDGU6De8gNCk3bTsME9"), "bob", Fixed8.Ten, UInt256.Zero(),
+//				1L, new BinaryData(new ArrayList<>()), new BinaryData(new ArrayList<>()));
+		UInt160 to = UInt160.fromBytes(Crypto.hash160(CryptoUtil.listTobyte(new BinaryData("0345ffbf8dc9d8ff15785e2c228ac48d98d29b834c2e98fb8cfe6e71474d7f6322").getData())));
+        PublicKey minerCoinFrom = PublicKey.apply(new BinaryData("0345ffbf8dc9d8ff15785e2c228ac48d98d29b834c2e98fb8cfe6e71474d7f6322"));
+        PublicKey producer = PublicKey.apply(new BinaryData("03b4534b44d1da47e4b4a504a210401a583f860468dec766f507251a057594e682"));
+//        Transaction tx = new Transaction(TransactionType.Miner, minerCoinFrom,
+//				to, "", Fixed8.Ten, UInt256.Zero(), 1L,
+//                new BinaryData(new ArrayList<>()), new BinaryData(new ArrayList<>()));
+		     val tx = new Transaction(TransactionType.Miner, minerCoinFrom,
+				to, "", Fixed8.Ten, UInt256.Zero(),  1L,
+				new BinaryData(new ArrayList<>()), new BinaryData(new ArrayList<>()),0x01,null);
 
 		tx.sign(privKey);
 		assert (tx.verifySignature() == true);
@@ -43,17 +48,15 @@ public class TransactionTest {
 		val transactionDeserializer = Transaction.deserialize(is);
 		
 		assert(tx.getTxType() == transactionDeserializer.getTxType());
-		assert(tx.getFrom().toString().equals(transactionDeserializer.getFrom().toString()));
+		assert(tx.getFrom().toBin().getData().equals(transactionDeserializer.getFrom().toBin().getData()));
 		assert(tx.getToPubKeyHash().toString().equals(transactionDeserializer.getToPubKeyHash().toString()));
 		assert(tx.getToName().equals(transactionDeserializer.getToName()));
 		assert(tx.getAmount().eq(transactionDeserializer.getAmount()));
 		assert(tx.getAssetId().toString().equals(transactionDeserializer.getAssetId().toString()));
 		assert(tx.getNonce()==transactionDeserializer.getNonce());
-		assert(tx.getData().toString().equals(transactionDeserializer.getData().toString()));
-		assert(tx.getSignature().toString().equals(transactionDeserializer.getSignature().toString()));
+		assert(tx.getData().getData().equals(transactionDeserializer.getData().getData()));
+		assert(tx.getSignature().getData().equals(transactionDeserializer.getSignature().getData()));
 		assert(tx.getVersion() == transactionDeserializer.getVersion());
-		
-		System.out.println("0377fb7a1fd741ccd78dbdedaa85f9009c01f1a687a1a17804d67b661d36f5c5cc".length());
-		System.out.println("6e66e5712fbebd2e5517099027915b4ae9ab9fb47a2f73a830275f3e6da75c2a01".length());
+
 	}
 }

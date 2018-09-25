@@ -54,9 +54,9 @@ public class PublicKey implements Serializable {
 //        return new PublicKey().getPoint().toString();
 //    }
 
-//    public String toAddress() {
-//    	return PublicKeyHash.toAddress(hash);
-//    }
+    public String toAddress() {
+    	return PublicKeyHash.toAddress(pubKeyHash().getData());
+    }
 
     public Point getPoint() {
         return point;

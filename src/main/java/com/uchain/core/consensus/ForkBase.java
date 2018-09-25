@@ -95,6 +95,7 @@ public class ForkBase {
 			twoTuple = addItem(block,lph);
 		}else {
 			if(!indexById.containsKey(block.id()) && indexById.containsKey(block.getHeader().getPrevBlock())) {
+				log.info("aaaaaaaaaaaaa");
 				Map<PublicKey, Integer> lastProducerHeight= _head.getLastProducerHeight();
 				lastProducerHeight.forEach((key,value) ->{
 					lph.put(key, value);
@@ -108,8 +109,10 @@ public class ForkBase {
 	private TwoTuple<List<ForkItem>,Boolean> addItem(Block block,Map<PublicKey, Integer> lph) {
 		PublicKey pub = block.getHeader().getProducer();
 		if(lph.containsKey(pub)) {
+			log.info("bbbbbbbbbb");
 			lph.put(pub, block.height());
 		}
+		log.info("ccccccccccccc="+lph.size());
 		TwoTuple<List<ForkItem>,Boolean> twoTuple = add(new ForkItem(block, lph,false));
 		return twoTuple;
 	}
@@ -130,7 +133,10 @@ public class ForkBase {
 			if(oldHead == null || item.getBlock().prev().equals(oldHead.getBlock().id())) {
 				item = new ForkItem(item.getBlock(),item.getLastProducerHeight(),true);
 				indexById.put(item.getBlock().id(), item);
-			}else if(!item.getBlock().id().equals(oldHead.getBlock().id())) {
+				if (db.set(Serializabler.toBytes(item.getBlock().id()), item.toBytes())) {
+					updateIndex(item);
+				}
+			}else  {
 				switchAdd(oldHead, item);
 			}
 			twoTuple = new TwoTuple<List<ForkItem>,Boolean>(saveBlocks,true);
@@ -150,13 +156,15 @@ public class ForkBase {
 		List<ForkItem> items = new ArrayList<ForkItem>();
 		WriteBatch batch = db.getBatchWrite();
 		twoTuple.first.forEach(item -> {
-			ForkItem newItem = new ForkItem(item.getBlock(),item.getLastProducerHeight(),true);
+			ForkItem newItem = new ForkItem(item.getBlock(),item.getLastProducerHeight(),false);
 			batch.put(Serializabler.toBytes(newItem.getBlock().id()), newItem.toBytes());
 			items.add(item);
 		});
-		db.BatchWrite(batch);;
+		db.BatchWrite(batch);
 		items.forEach(item -> {
-			indexById.put(item.getBlock().id(), item);
+			ForkItem newItem = new ForkItem(item.getBlock(),item.getLastProducerHeight(),false);
+			batch.put(Serializabler.toBytes(newItem.getBlock().id()), newItem.toBytes());
+			items.add(item);
 		});
         items.forEach(item -> updateIndex(item));
 	}
@@ -183,6 +191,8 @@ public class ForkBase {
 	 * @return 
 	 */
 	private List<ForkItem> removeConfirmed(int height) {
+		ThreeTuple<Integer, Boolean, UInt256> threeTuple = indexByHeight.head();
+
 		List<ForkItem> saveBlocks = Lists.newArrayList();
 		List<ForkItem> items = new ArrayList<ForkItem>();
 		SortedMultiMap2Iterator<Integer,Boolean,UInt256> iterator = indexByHeight.iterator();
@@ -232,8 +242,10 @@ public class ForkBase {
 	private Boolean insert(ForkItem item) {
 		if (db.set(Serializabler.toBytes(item.getBlock().id()), item.toBytes())) {
 			createIndex(item);
+			log.info("dddddddddddd");
 			return true;
 		} else {
+			log.info("eeeeeeeeee");
 			return false;
 		}
 	}

@@ -28,7 +28,7 @@ import lombok.val;
 public class Transaction implements Identifier<UInt256> {
 
 	private TransactionType txType; //交易类型
-	private BinaryData from; // from
+	private PublicKey from; // from
 	private UInt160 toPubKeyHash; // to
 	private String toName; //  发送交易者的账户
 	private Fixed8 amount; //  发送金额
@@ -39,8 +39,8 @@ public class Transaction implements Identifier<UInt256> {
 	private int version = 0x01;
 	private UInt256 id = null;
 
-	public Transaction(TransactionType txType, BinaryData from, UInt160 toPubKeyHash, String toName, Fixed8 amount,
-			UInt256 assetId, Long nonce, BinaryData data, BinaryData signature/*, int version, UInt256 _id*/) {
+	public Transaction(TransactionType txType, PublicKey from, UInt160 toPubKeyHash, String toName, Fixed8 amount,
+			UInt256 assetId, Long nonce, BinaryData data, BinaryData signature, int version, UInt256 id) {
 		this.txType = txType;
 		this.from = from;
 		this.toPubKeyHash = toPubKeyHash;
@@ -51,17 +51,17 @@ public class Transaction implements Identifier<UInt256> {
 		this.data = data;
 		this.signature = signature;
 		this.version = 0x01;
-//		this._id = _id;
+		this.id = id;
 	}
 
 	Fixed8 fee = Fixed8.Zero;
 
 	public UInt160 fromPubKeyHash() {// from转换和to一样格式
-		return UInt160.fromBytes(PublicKey.apply(from).hash160());
+		return from.pubKeyHash();
 	}
 
 	public String fromAddress() { //from转换ap打头
-		return PublicKeyHash.toAddress(PublicKey.apply(from).hash160());
+		return from.toAddress();
 	}
 
 	public String toAddress() {  //to转换ap打头
@@ -102,15 +102,14 @@ public class Transaction implements Identifier<UInt256> {
 		return bs.toByteArray();
 	}
     //签名
-	public BinaryData sign(PrivateKey privateKey) {
+	public void sign(PrivateKey privateKey) {
 		signature = CryptoUtil
 				.array2binaryData(Crypto.sign(dataForSigning(), CryptoUtil.binaryData2array(privateKey.toBin())));
-		return signature;
 	}
     //验证签名
 	public boolean verifySignature() {
 		return Crypto.verifySignature(dataForSigning(), CryptoUtil.binaryData2array(signature),
-				CryptoUtil.binaryData2array(from));
+				CryptoUtil.binaryData2array(from.toBin()));
 	}
 
 	public static ArrayList<Transaction> transactionToArrayList(Transaction transaction){
@@ -123,7 +122,7 @@ public class Transaction implements Identifier<UInt256> {
 		try {
 			os.writeByte(TransactionType.getTransactionTypeByType(txType));
 			os.writeInt(version);
-			Serializabler.writeByteArray(os, CryptoUtil.binaryData2array(from));
+			Serializabler.write(os,from);
 			Serializabler.write(os, toPubKeyHash);
 			Serializabler.writeString(os, toName);
 			Serializabler.write(os, amount);
@@ -162,7 +161,7 @@ public class Transaction implements Identifier<UInt256> {
 		try {
 			val txType = TransactionType.getTransactionTypeByValue(is.readByte());
 			val version = is.readInt();
-			val from = CryptoUtil.array2binaryData(Serializabler.readByteArray(is));
+			val from = PublicKey.deserialize(is);
 			val toPubKeyHash = UInt160.deserialize(is);
 			val toName = Serializabler.readString(is);
 			val amount = Fixed8.deserialize(is);
@@ -170,9 +169,8 @@ public class Transaction implements Identifier<UInt256> {
 			val nonce = is.readLong();
 			val data = CryptoUtil.array2binaryData(Serializabler.readByteArray(is));
 			val signature = CryptoUtil.array2binaryData(Serializabler.readByteArray(is));
-//		val id = UInt256Util.deserialize(is);
-			return new Transaction(txType, from, toPubKeyHash, toName, amount, assetId, nonce, data, signature/*, version,
-					id*/);
+			return new Transaction(txType, from, toPubKeyHash, toName, amount, assetId, nonce, data, signature, version,
+					UInt256.deserialize(is));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

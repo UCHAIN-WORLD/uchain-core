@@ -1,6 +1,7 @@
 package com.uchain.network.message;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 
 import com.uchain.common.Serializabler;
 import com.uchain.core.Block;

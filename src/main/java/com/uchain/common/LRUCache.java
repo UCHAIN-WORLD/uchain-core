@@ -5,6 +5,7 @@ public class LRUCache<K, V> implements Cache<K, V> {
 
 	public LRUCache(int capacity) {
 		this.capacity = capacity;
+		container = new LRUMap<K, V>(capacity);
 	}
 
 	@SuppressWarnings("serial")
@@ -22,7 +23,7 @@ public class LRUCache<K, V> implements Cache<K, V> {
 		}
 	}
 
-	LRUMap<K, V> container = new LRUMap<K, V>(capacity);
+	LRUMap<K, V> container ;
 
 	@Override
 	public int size() {

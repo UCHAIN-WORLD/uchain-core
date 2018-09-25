@@ -29,6 +29,8 @@ public class Object2Array {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
+        System.out.println(byteArrayToInt(intToByteArray(3)));
     }
 	
 	/**

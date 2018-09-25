@@ -94,8 +94,8 @@ public class Serializabler {
 	
 	public static byte[] readByteArray(DataInputStream is) throws IOException {
 		byte[] data = new byte[is.readInt()];
-        Arrays.fill(data, (byte)0);
-        is.read(data, 0, data.length);
+		Arrays.fill(data, (byte)0);
+		is.read(data, 0, data.length);
 		return data;
 	}
 

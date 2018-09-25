@@ -45,6 +45,16 @@ public class NetworkUtil {
 			this.direction = direction;
 			this.handshake = handshake;
 		}
+
+		@Override
+		public String toString() {
+			return "ConnectedPeer{" +
+					"socketAddress=" + socketAddress +
+					", handlerRef=" + handlerRef +
+					", direction=" + direction +
+					", handshake=" + handshake +
+					'}';
+		}
 	}
 
 	@Getter

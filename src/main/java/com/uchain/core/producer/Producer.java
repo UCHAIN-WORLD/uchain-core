@@ -90,7 +90,7 @@ public class Producer extends AbstractActor {
 		    	return new NotMyTurn(witness.getName(), PublicKey.apply(new BinaryData(witness.getPubkey())));
 		    }else {
 				Collection<Transaction> valueCollection = txPool.values();
-				List<Transaction> txs = new ArrayList<Transaction>(valueCollection);
+				List<Transaction> txs = new ArrayList<>(valueCollection);
 				Block block = chain.produceBlock(PublicKey.apply(new BinaryData(witness.getPubkey())),
 						PrivateKey.apply(new BinaryData(witness.getPrivkey())), nextProduceTime(now, next), txs);
 				return new Success(block, witness.getName(), now);

@@ -97,7 +97,7 @@ public class PeerHandlerManager extends AbstractActor{
 		    	  connectingPeers.remove(msg.getRemoteAddress());
 	          })
 		      .match(BlockMessage.class, msg -> {
-		    	  log.info("broadcasting BlockMessage");
+		    	  log.info("broadcasting BlockMessage:");
 		    	  connectedPeers.forEach((socketAddress, connectedPeer) -> {
 		    		  connectedPeer.getHandlerRef().tell(msg.pack(), getSelf());
 		    		  log.info("send block "+msg.getBlock().height()+"("+msg.getBlock().id()+") to "+connectedPeer.toString());
