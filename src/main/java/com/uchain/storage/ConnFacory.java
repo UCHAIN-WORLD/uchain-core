@@ -16,9 +16,6 @@ public class ConnFacory {
 	}
  
 	public static LevelDbStorage getInstance(String dbFile) {
-		if (levelDbStorage == null) {
-			synchronized (LevelDbStorage.class) {
-				if (levelDbStorage == null) {
 					try {
 			        	Options options = new Options();
 			        	options.createIfMissing(true);
@@ -27,10 +24,7 @@ public class ConnFacory {
 			        } catch (Exception e) {
 			            e.printStackTrace();
 			        }
-				}
-			}
-		}
-		return levelDbStorage;
+		            return levelDbStorage;
 	}
 
 }

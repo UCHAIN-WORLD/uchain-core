@@ -37,7 +37,8 @@ public class ForkBase {
 	
 	
 	public ForkBase(Settings settings) {
-		this.db = ConnFacory.getInstance(settings.getChainSettings().getChain_dbDir());
+		String path = settings.getChainSettings().getChain_forkDir();
+		this.db = ConnFacory.getInstance(path);
 		this.settings = settings;
 		init();
 	}

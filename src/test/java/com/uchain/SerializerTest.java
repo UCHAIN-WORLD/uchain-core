@@ -39,10 +39,20 @@ public class SerializerTest<A extends Serializable> {
     public static UInt256 testHash256(String str) throws IOException {
         return UInt256.fromBytes(Crypto.hash256(str.getBytes("UTF-8")));
     }
+    //java方法没有默认值，以此代替
+    public static  UInt256 testHash256() throws IOException{
+        String  str = "test";
+        return UInt256.fromBytes(Crypto.hash256(str.getBytes("UTF-8")));
+
+    }
 
     public static UInt160 testHash160(String str) throws IOException {
         return UInt160.fromBytes(Crypto.hash160(str.getBytes("UTF-8")));
     }
-
+    //java方法没有默认值，以此代替
+    public static UInt160 testHash160() throws IOException {
+        String str = "test";
+        return UInt160.fromBytes(Crypto.hash160(str.getBytes("UTF-8")));
+    }
 
 }
