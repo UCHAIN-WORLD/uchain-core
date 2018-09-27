@@ -1,10 +1,10 @@
 package com.uchain.crypto;
 
+import org.bouncycastle.util.encoders.Hex;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Arrays;
-
-import org.bouncycastle.util.encoders.Hex;
 
 public class UInt256 extends UIntBase {
     public UInt256(byte[] data) {
@@ -17,7 +17,7 @@ public class UInt256 extends UIntBase {
     public int compare(UInt256 that) {
         return UIntBaseCompare.compare(this, that);
     }
-    
+
     
     public static UInt256 fromBytes(byte []bytes) {
         if (bytes.length == UIntUtil.UInt256_Size){
@@ -60,4 +60,6 @@ public class UInt256 extends UIntBase {
         Arrays.fill(data, (byte)0);
         return fromBytes(data);
     }
+
+
 }

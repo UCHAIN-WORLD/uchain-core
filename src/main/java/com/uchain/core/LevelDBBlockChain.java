@@ -1,51 +1,28 @@
 package com.uchain.core;
 
+import com.uchain.common.Serializabler;
+import com.uchain.core.consensus.ForkBase;
+import com.uchain.core.consensus.ForkItem;
+import com.uchain.core.consensus.TwoTuple;
+import com.uchain.core.datastore.*;
+import com.uchain.core.datastore.keyvalue.*;
+import com.uchain.crypto.*;
+import com.uchain.main.Settings;
+import com.uchain.storage.ConnFacory;
+import com.uchain.storage.LevelDbStorage;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.val;
+import org.iq80.leveldb.WriteBatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import akka.http.javadsl.model.DateTime;
-import com.uchain.crypto.*;
-import org.iq80.leveldb.WriteBatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.uchain.common.Serializabler;
-import com.uchain.core.consensus.ForkBase;
-import com.uchain.core.consensus.ForkItem;
-import com.uchain.core.consensus.TwoTuple;
-import com.uchain.core.datastore.AccountStore;
-import com.uchain.core.datastore.BlkTxMappingStore;
-import com.uchain.core.datastore.DataStoreConstant;
-import com.uchain.core.datastore.HeadBlockStore;
-import com.uchain.core.datastore.HeaderStore;
-import com.uchain.core.datastore.HeightStore;
-import com.uchain.core.datastore.NameToAccountStore;
-import com.uchain.core.datastore.ProducerStateStore;
-import com.uchain.core.datastore.TransactionStore;
-import com.uchain.core.datastore.keyvalue.AccountValue;
-import com.uchain.core.datastore.keyvalue.BlkTxMappingValue;
-import com.uchain.core.datastore.keyvalue.BlockHeaderValue;
-import com.uchain.core.datastore.keyvalue.HeadBlock;
-import com.uchain.core.datastore.keyvalue.HeadBlockValue;
-import com.uchain.core.datastore.keyvalue.IntKey;
-import com.uchain.core.datastore.keyvalue.ProducerStatus;
-import com.uchain.core.datastore.keyvalue.ProducerStatusValue;
-import com.uchain.core.datastore.keyvalue.StringKey;
-import com.uchain.core.datastore.keyvalue.TransactionValue;
-import com.uchain.core.datastore.keyvalue.UInt160Key;
-import com.uchain.core.datastore.keyvalue.UInt256Key;
-import com.uchain.core.datastore.keyvalue.UInt256Value;
-import com.uchain.main.Settings;
-import com.uchain.storage.ConnFacory;
-import com.uchain.storage.LevelDbStorage;
-
-import lombok.Getter;
-import lombok.Setter;
-import lombok.val;
 
 @Getter
 @Setter
@@ -264,6 +241,7 @@ public class LevelDBBlockChain implements BlockChain{
         val txs = getUpdateTransaction(minerTx, transactions);
         val merkleRoot = MerkleTree.root(txs.stream().map(v -> v.id()).collect(Collectors.toList()));
         ForkItem forkHead = forkBase.head();
+        System.out.println("forkHeadforkHeadforkHead="+forkHead.getBlock().height());
         val header = BlockHeader.build(forkHead.getBlock().height() + 1, timeStamp, merkleRoot,
                 forkHead.getBlock().id(), producer, privateKey);
         val block = new Block(header, txs);
@@ -296,10 +274,14 @@ public class LevelDBBlockChain implements BlockChain{
 //            if (saveBlockToStores(block))
 //                return true;
 //        return false;
-        TwoTuple<List<ForkItem>,Boolean>  twoTuple = forkBase.add(block);
-        if(twoTuple.second)
+        TwoTuple<List<ForkItem>,Boolean> twoTuple = forkBase.add(block);
+        if(twoTuple != null) {
+            List<ForkItem> forkItem = twoTuple.first;
+            for (int i = 0; i < forkItem.size(); i++) {
+                onConfirmed(forkItem.get(i).getBlock());
+            }
             return true;
-        else
+        }else
             return false;
     }
 

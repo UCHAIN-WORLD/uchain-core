@@ -1,26 +1,17 @@
 package com.uchain.core.consensus;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
+import com.google.common.collect.Lists;
 import com.uchain.common.Serializabler;
 import com.uchain.core.Block;
 import com.uchain.crypto.CryptoUtil;
 import com.uchain.crypto.PublicKey;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
+
+import java.io.*;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Setter
 @Getter
@@ -45,19 +36,11 @@ public class ForkItem {
 		if (_confirmedHeight == -1) {
 			int index = lastProducerHeight.size() * 2 / 3;
 			List<Integer> lastHeights = lastProducerHeight.values().stream().collect(Collectors.toList());
-			Collections.sort(lastHeights, new Comparator<Integer>() {
-				public int compare(Integer o1, Integer o2) {
-					// 按照金额大小进行降序排列
-					if (o1.intValue() < o2.intValue()) {
-						return 1;
-					}
-					if (o1.intValue() == o2.intValue()) {
-						return 0;
-					}
-					return -1;
-				}
-			});
+			Collections.sort(lastHeights,Collections.reverseOrder());
 			_confirmedHeight = lastHeights.get(index);
+			System.out.println(lastProducerHeight.size());
+			System.out.println(Arrays.toString(lastHeights.toArray()));
+			System.out.println(index+"aaaaaaaaaaaaa"+_confirmedHeight);
 		}
 		return _confirmedHeight;
 	}
@@ -110,4 +93,15 @@ public class ForkItem {
 		return null;
 	}
 
+	public static void main(String[] args) {
+		List<Integer> lastHeights = Lists.newArrayList();
+		lastHeights.add(5);
+		lastHeights.add(3);
+		lastHeights.add(8);
+		lastHeights.add(6);
+
+		Collections.sort(lastHeights,Collections.reverseOrder());
+		System.out.println(lastHeights.get(0));
+		System.out.println(Arrays.toString(lastHeights.toArray()));
+	}
 }

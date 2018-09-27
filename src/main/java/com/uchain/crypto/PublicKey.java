@@ -1,11 +1,14 @@
 package com.uchain.crypto;
 
+import com.google.common.collect.Maps;
 import com.uchain.common.Serializable;
 import com.uchain.common.Serializabler;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Map;
+import java.util.Objects;
 
 public class PublicKey implements Serializable {
 
@@ -90,5 +93,28 @@ public class PublicKey implements Serializable {
             e.printStackTrace();
         }
         return null;
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PublicKey)) return false;
+        PublicKey publicKey = (PublicKey) o;
+        return isCompressed() == publicKey.isCompressed() &&
+                Objects.equals(getPoint(), publicKey.getPoint());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getPoint(), isCompressed());
+    }
+
+    public static void main(String[] args) {
+
+        Map<PublicKey, Integer> lph = Maps.newLinkedHashMap();
+        lph.put(PublicKey.apply(new BinaryData("03b4534b44d1da47e4b4a504a210401a583f860468dec766f507251a057594e682")),1);
+        System.out.println(lph.get(PublicKey.apply(new BinaryData("03b4534b44d1da47e4b4a504a210401a583f860468dec766f507251a057594e682"))));
+        System.out.println(lph.containsKey(PublicKey.apply(new BinaryData("03b4534b44d1da47e4b4a504a210401a583f860468dec766f507251a057594e682"))));
     }
 }

@@ -1,20 +1,12 @@
 package com.uchain.core.producer;
 
-import java.math.BigInteger;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.*;
-
-import akka.io.Tcp;
-import com.google.common.collect.Lists;
+import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
+import akka.actor.Props;
 import com.uchain.core.Block;
 import com.uchain.core.BlockChain;
 import com.uchain.core.Transaction;
-import com.uchain.core.producer.ProduceStateImpl.Failed;
-import com.uchain.core.producer.ProduceStateImpl.NotMyTurn;
-import com.uchain.core.producer.ProduceStateImpl.NotSynced;
-import com.uchain.core.producer.ProduceStateImpl.NotYet;
-import com.uchain.core.producer.ProduceStateImpl.Success;
+import com.uchain.core.producer.ProduceStateImpl.*;
 import com.uchain.crypto.BinaryData;
 import com.uchain.crypto.PrivateKey;
 import com.uchain.crypto.PublicKey;
@@ -22,10 +14,10 @@ import com.uchain.crypto.UInt256;
 import com.uchain.main.ConsensusSettings;
 import com.uchain.main.Witness;
 
-import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import com.uchain.network.message.*;
+import java.math.BigInteger;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.*;
 
 public class Producer extends AbstractActor {
 
@@ -93,6 +85,7 @@ public class Producer extends AbstractActor {
 				List<Transaction> txs = new ArrayList<>(valueCollection);
 				Block block = chain.produceBlock(PublicKey.apply(new BinaryData(witness.getPubkey())),
 						PrivateKey.apply(new BinaryData(witness.getPrivkey())), nextProduceTime(now, next), txs);
+				txPool.clear();
 				return new Success(block, witness.getName(), now);
 		    }
 		}

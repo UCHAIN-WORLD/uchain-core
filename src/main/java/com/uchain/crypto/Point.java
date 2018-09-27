@@ -7,6 +7,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Objects;
 
 
 public class Point implements Serializable{
@@ -80,5 +81,18 @@ public class Point implements Serializable{
             e.printStackTrace();
         }
 
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Point)) return false;
+        Point point = (Point) o;
+        return Objects.equals(getValue(), point.getValue());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getValue());
     }
 }

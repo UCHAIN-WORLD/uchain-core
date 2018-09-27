@@ -1,17 +1,5 @@
 package com.uchain.core.consensus;
 
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import com.uchain.crypto.Crypto;
-import org.iq80.leveldb.WriteBatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.collect.Lists;
 import com.uchain.common.Serializabler;
 import com.uchain.core.Block;
@@ -23,6 +11,15 @@ import com.uchain.main.Settings;
 import com.uchain.main.Witness;
 import com.uchain.storage.ConnFacory;
 import com.uchain.storage.LevelDbStorage;
+import org.iq80.leveldb.WriteBatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 
 public class ForkBase {
@@ -30,10 +27,10 @@ public class ForkBase {
 	private Settings settings;
 	private ForkItem _head;
 	private LevelDbStorage db;
-	private Map<UInt256, ForkItem> indexById = new HashMap<UInt256, ForkItem>();
+	private Map<UInt256, ForkItem> indexById = new HashMap<>();
 	private MultiMap<UInt256, UInt256> indexByPrev = new MultiMap<UInt256, UInt256>();		  
-	private SortedMultiMap2<Integer,Boolean,UInt256> indexByHeight = new SortedMultiMap2<Integer,Boolean,UInt256>("asc","reverse");
-	private SortedMultiMap2<Integer,Integer,UInt256> indexByConfirmedHeight = new SortedMultiMap2<Integer,Integer,UInt256>("reverse","reverse");
+	private SortedMultiMap2<Integer,Boolean,UInt256> indexByHeight = new SortedMultiMap2<>("asc","reverse");
+	private SortedMultiMap2<Integer,Integer,UInt256> indexByConfirmedHeight = new SortedMultiMap2<>("reverse","reverse");
 	
 	
 	public ForkBase(Settings settings) {
@@ -70,7 +67,7 @@ public class ForkBase {
 		ForkItem current = _head;
 		while(current != null) {
 			if(current.getBlock().prev().equals(id)) {
-				target = current.getBlock().prev();
+				target = current.getBlock().id();
 				current = null;
 			}else {
 				current = get(current.getBlock().prev());
@@ -96,7 +93,6 @@ public class ForkBase {
 			twoTuple = addItem(block,lph);
 		}else {
 			if(!indexById.containsKey(block.id()) && indexById.containsKey(block.getHeader().getPrevBlock())) {
-				log.info("aaaaaaaaaaaaa");
 				Map<PublicKey, Integer> lastProducerHeight= _head.getLastProducerHeight();
 				lastProducerHeight.forEach((key,value) ->{
 					lph.put(key, value);
@@ -110,10 +106,8 @@ public class ForkBase {
 	private TwoTuple<List<ForkItem>,Boolean> addItem(Block block,Map<PublicKey, Integer> lph) {
 		PublicKey pub = block.getHeader().getProducer();
 		if(lph.containsKey(pub)) {
-			log.info("bbbbbbbbbb");
 			lph.put(pub, block.height());
 		}
-		log.info("ccccccccccccc="+lph.size());
 		TwoTuple<List<ForkItem>,Boolean> twoTuple = add(new ForkItem(block, lph,false));
 		return twoTuple;
 	}
@@ -124,7 +118,7 @@ public class ForkBase {
      * @return
      */
 	private TwoTuple<List<ForkItem>, Boolean> add(ForkItem item) {
-		List<ForkItem> saveBlocks = null;
+		List<ForkItem> saveBlocks = Lists.newArrayList();
 		TwoTuple<List<ForkItem>,Boolean> twoTuple = null;
 		if (insert(item)) {
 			ForkItem oldHead = _head;
@@ -132,17 +126,16 @@ public class ForkBase {
 			item = _head;
 			saveBlocks = removeConfirmed(item.confirmedHeight());
 			if(oldHead == null || item.getBlock().prev().equals(oldHead.getBlock().id())) {
-				item = new ForkItem(item.getBlock(),item.getLastProducerHeight(),true);
-				indexById.put(item.getBlock().id(), item);
-				if (db.set(Serializabler.toBytes(item.getBlock().id()), item.toBytes())) {
-					updateIndex(item);
+				ForkItem newItem = new ForkItem(item.getBlock(),item.getLastProducerHeight(),true);
+				if (db.set(Serializabler.toBytes(item.getBlock().id()), newItem.toBytes())) {
+					updateIndex(newItem);
 				}
 			}else  {
 				switchAdd(oldHead, item);
 			}
-			twoTuple = new TwoTuple<List<ForkItem>,Boolean>(saveBlocks,true);
+			twoTuple = new TwoTuple<>(saveBlocks,true);
 		}else {
-			twoTuple =new TwoTuple<List<ForkItem>,Boolean>(saveBlocks,false);
+			twoTuple =new TwoTuple<>(saveBlocks,false);
 		}
 		return twoTuple;
 	}
@@ -163,13 +156,16 @@ public class ForkBase {
 		});
 		db.BatchWrite(batch);
 		items.forEach(item -> {
-			ForkItem newItem = new ForkItem(item.getBlock(),item.getLastProducerHeight(),false);
+			ForkItem newItem = new ForkItem(item.getBlock(),item.getLastProducerHeight(),true);
 			batch.put(Serializabler.toBytes(newItem.getBlock().id()), newItem.toBytes());
 			items.add(item);
 		});
         items.forEach(item -> updateIndex(item));
 	}
-	
+
+	public void close() {
+		db.close();
+	}
 	/**
 	 * 初始化
 	 */
@@ -192,48 +188,46 @@ public class ForkBase {
 	 * @return 
 	 */
 	private List<ForkItem> removeConfirmed(int height) {
-		ThreeTuple<Integer, Boolean, UInt256> threeTuple = indexByHeight.head();
-
 		List<ForkItem> saveBlocks = Lists.newArrayList();
 		List<ForkItem> items = new ArrayList<ForkItem>();
-		SortedMultiMap2Iterator<Integer,Boolean,UInt256> iterator = indexByHeight.iterator();
-		if(iterator.hasNext()) {
-			ThreeTuple<Integer,Boolean,UInt256> p = iterator.next();
-			if(p.first < height) {
-				ForkItem item = indexById.get(p.third);
+		ThreeTuple<Integer, Boolean, UInt256> threeTuple = indexByHeight.head();
+		System.out.println("removeConfirmedremoveConfirmedremoveConfirmed");
+		if(threeTuple!=null){
+			System.out.println("removeConfirmedremoveConfirmedremoveConfirmed"+threeTuple.first+"   "+height);
+			if(threeTuple.first < height){
+				ForkItem item = indexById.get(threeTuple.third);
+				System.out.println("item.isMaster()item.isMaster()item.isMaster()"+item.isMaster());
 				if(item.isMaster()) {
 					items.add(item);
+					saveBlocks.add(item);
 				}
+				WriteBatch batch = db.getBatchWrite();
+				batch.delete(Serializabler.toBytes(item.getBlock().id()));
+				deleteIndex(item);
+				db.BatchWrite(batch);
 			}
 		}
-		items.forEach(item -> {
-			if(item.isMaster()) {
-				saveBlocks.add(item);
-				deleteIndex(item);
-			}else {
-				removeFork(item.getBlock().id());
-			}
-		});
+		System.out.println("saveBlocks="+saveBlocks.size());
 		return saveBlocks;
 	}
 
-	/**
-	 * 从当前id开始删除所以分叉
-	 * @param id
-	 */
-	private void removeFork(UInt256 id) {
-		log.info("remove fork:"+id);
-		List<UInt256> list = indexByPrev.get(id);
-		WriteBatch batch = db.getBatchWrite();
-		for (UInt256 uInt256 : list) {
-			ForkItem forkItem = indexById.get(uInt256);
-			if(forkItem!=null) {
-				batch.delete(Serializabler.toBytes(forkItem.getBlock().id()));
-				deleteIndex(forkItem);
-			}
-		}
-		db.BatchWrite(batch);
-	}
+//	/**
+//	 * 从当前id开始删除所以分叉
+//	 * @param id
+//	 */
+//	private void removeFork(UInt256 id) {
+//		log.info("remove fork:"+id);
+//		List<UInt256> list = indexByPrev.get(id);
+//		WriteBatch batch = db.getBatchWrite();
+//		for (UInt256 uInt256 : list) {
+//			ForkItem forkItem = indexById.get(uInt256);
+//			if(forkItem!=null) {
+//				batch.delete(Serializabler.toBytes(forkItem.getBlock().id()));
+//				deleteIndex(forkItem);
+//			}
+//		}
+//		db.BatchWrite(batch);
+//	}
 	
 	/**
 	 * 存入ForkBase
@@ -243,10 +237,8 @@ public class ForkBase {
 	private Boolean insert(ForkItem item) {
 		if (db.set(Serializabler.toBytes(item.getBlock().id()), item.toBytes())) {
 			createIndex(item);
-			log.info("dddddddddddd");
 			return true;
 		} else {
-			log.info("eeeeeeeeee");
 			return false;
 		}
 	}
@@ -262,14 +254,14 @@ public class ForkBase {
 		ForkItem b = y;
 		TwoTuple<List<ForkItem>, List<ForkItem>> twoTuple = null;
 		if(a.getBlock().id().equals(b.getBlock().id())) {
-			List<ForkItem> aList = new ArrayList<ForkItem>();
-			List<ForkItem> bList = new ArrayList<ForkItem>();
+			List<ForkItem> aList = new ArrayList<>();
+			List<ForkItem> bList = new ArrayList<>();
 			aList.add(a);
 			bList.add(b);
-			twoTuple = new TwoTuple<List<ForkItem>, List<ForkItem>>(aList,bList);
+			twoTuple = new TwoTuple<>(aList,bList);
 		}else {
-			List<ForkItem> xs = new ArrayList<ForkItem>();
-			List<ForkItem> ys = new ArrayList<ForkItem>();
+			List<ForkItem> xs = new ArrayList<>();
+			List<ForkItem> ys = new ArrayList<>();
 			while(a.getBlock().getHeader().getIndex() < b.getBlock().getHeader().getIndex()) {
 				xs.add(a);
 				a = getPrev(a);
@@ -306,6 +298,7 @@ public class ForkBase {
 		Block blk = item.getBlock();
 		indexById.put(blk.id(), item);
 		indexByPrev.put(blk.prev(), blk.id());
+		System.out.println("存入的高度="+item.confirmedHeight()+"  "+blk.height()+"  "+blk.id().toString());
 		indexByHeight.put(blk.height(), item.isMaster(), blk.id());
 		indexByConfirmedHeight.put(item.confirmedHeight(), blk.height(), blk.id());
 	}
@@ -314,6 +307,7 @@ public class ForkBase {
 		Block blk = item.getBlock();
 		indexById.remove(blk.id());
 		indexByPrev.remove(blk.prev());
+		System.out.println("删除的高度="+item.confirmedHeight()+"  "+blk.height()+"  "+blk.id().toString());
 		indexByHeight.remove(blk.height(), item.isMaster());
 	    indexByConfirmedHeight.remove(item.confirmedHeight(), blk.height());
 	}
@@ -327,26 +321,13 @@ public class ForkBase {
 		if(list != null) {
 			for (UInt256 u : list) {
 				if (!u.equals(id)) {
+					System.out.println("删除的高度1="+height);
 					indexByHeight.put(height, branch, u);
 				}
 			}
 		}
+		System.out.println("删除的高度2="+height);
         indexByHeight.put(height, branch, id);
 		indexById.put(id, newItem);
 	}
-
-    public static void main(String[] args) {
-        Map<UInt256, String> indexById = new HashMap<>();
-        indexById.put(UInt256.Zero(), "a");
-        System.out.println(indexById.containsKey(UInt256.Zero()));
-
-
-        try {
-            UInt256 key = UInt256.fromBytes(Crypto.hash256(("test").getBytes("UTF-8")));
-            indexById.put(key, "a");
-            System.out.println(indexById.containsKey(key));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-    }
 }

@@ -1,16 +1,14 @@
 package com.uchain.crypto;
 
 import com.uchain.common.Serializable;
-
 import lombok.Getter;
 import lombok.Setter;
-
 import org.bouncycastle.util.encoders.Hex;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Objects;
+import java.util.Arrays;
 
 @Getter
 @Setter
@@ -28,16 +26,14 @@ public class UIntBase implements Serializable {
         }
     }
 
+
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (!(obj instanceof UIntBase)) {
-            return false;
-        }
-        UIntBase uIntBase = (UIntBase) obj;
-        return Objects.equals(data, uIntBase.getData());
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof UIntBase)) return false;
+        UIntBase uIntBase = (UIntBase) o;
+        return getSize() == uIntBase.getSize() &&
+                Arrays.equals(getData(), uIntBase.getData());
     }
 
     @Override

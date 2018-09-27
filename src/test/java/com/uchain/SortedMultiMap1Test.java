@@ -1,9 +1,14 @@
 package com.uchain;
 
-import org.junit.Test;
-
 import com.uchain.core.consensus.SortedMultiMap1;
 import com.uchain.core.consensus.SortedMultiMap1Iterator;
+import com.uchain.crypto.Crypto;
+import com.uchain.crypto.UInt256;
+import org.junit.Test;
+
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SortedMultiMap1Test {
 	@Test
@@ -40,5 +45,15 @@ public class SortedMultiMap1Test {
 //			TwoTuple<Integer, String> two = sorted3.next();
 //			System.out.println(two.first);
 //		}
+
+		Map<UInt256, Integer> indexById = new HashMap<>();
+		String  str = "test";
+		try {
+			indexById.put(UInt256.fromBytes(Crypto.hash256(str.getBytes("UTF-8"))),1);
+			System.out.println(indexById.containsKey(UInt256.fromBytes(Crypto.hash256(str.getBytes("UTF-8")))));
+
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
 	}
 }

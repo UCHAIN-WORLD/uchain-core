@@ -1,14 +1,13 @@
 package com.uchain;
 
-import java.io.UnsupportedEncodingException;
-
-import org.junit.Test;
-
 import com.uchain.core.consensus.SortedMultiMap2;
 import com.uchain.core.consensus.SortedMultiMap2Iterator;
 import com.uchain.core.consensus.ThreeTuple;
 import com.uchain.crypto.Crypto;
 import com.uchain.crypto.UInt256;
+import org.junit.Test;
+
+import java.io.UnsupportedEncodingException;
 
 public class SortedMultiMap2Test {
 	@Test
@@ -50,5 +49,15 @@ public class SortedMultiMap2Test {
 		SortedMultiMap2Iterator<String, Boolean, UInt256> sortedMultiMap2Iterator2 = sortedMultiMap22.iterator();
 		ThreeTuple<String, Boolean, UInt256> three2 = sortedMultiMap2Iterator2.next();
 		assert (three2.first.equals("8") && three2.second.booleanValue() == true);
+
+
+		SortedMultiMap2<Integer, Boolean, UInt256> sortedMultiMap23 = new SortedMultiMap2<>(
+				"asc", "reverse");
+		sortedMultiMap23.put(2, true, ss);
+		sortedMultiMap23.put(8, true, ss);
+		sortedMultiMap23.put(2, true, ss);
+		sortedMultiMap23.put(7, true, ss);
+		ThreeTuple<Integer, Boolean, UInt256> threeTuple = sortedMultiMap23.head();
+		System.out.println(threeTuple.first);
 	}
 }
