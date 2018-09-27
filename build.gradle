@@ -42,7 +42,14 @@ configurations {
         compile group: 'org.iq80.leveldb', name: 'leveldb-api', version: '0.10'
         compile group: 'org.fusesource.leveldbjni', name: 'leveldbjni-all', version: '1.8'
         compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.1'
-        compile 'net.sf.json-lib:json-lib:2.4:jdk15' 
+        compile 'net.sf.json-lib:json-lib:2.4:jdk15'
+
+        compile group: 'org.glassfish.jersey.containers', name: 'jersey-container-servlet', version: '2.20'
+        compile group: 'org.glassfish.jersey.core', name: 'jersey-server', version: '2.20'
+        compile group: 'org.glassfish.jersey.containers', name: 'jersey-container-grizzly2-http', version: '2.20'
+        compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.3.5'
+        compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.3.5'
+        compile group: 'com.fasterxml.jackson.jaxrs', name: 'jackson-jaxrs-json-provider', version: '2.3.5'
     }
 
 }
