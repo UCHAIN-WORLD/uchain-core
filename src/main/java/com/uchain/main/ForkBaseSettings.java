@@ -1,0 +1,1 @@
+package com.uchain.main;import lombok.Getter;import lombok.Setter;@Setter@Getterpublic class ForkBaseSettings {    String dir;    boolean cacheEnabled;    int cacheSize;    public ForkBaseSettings(String dir, boolean cacheEnabled, int cacheSize){        this.dir = dir;        this.cacheEnabled = cacheEnabled;        this.cacheSize = cacheSize;    }}

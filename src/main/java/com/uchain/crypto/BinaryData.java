@@ -15,6 +15,7 @@ public class BinaryData/* implements Serializable*/ {
     private List<Byte> data;
 
     public static byte[] empty = new byte[0];
+
     public BinaryData(String hex) {
         val decodeData = Hex.decode(hex);
         this.data = CryptoUtil.byteToList(decodeData);
@@ -33,8 +34,18 @@ public class BinaryData/* implements Serializable*/ {
         return length;
     }
 
-//    @Override
-//    public String toString() {
-//        return Hex.toHexString(CryptoUtil.listTobyte(getData()));
-//    }
+    @Override
+    public boolean equals(Object obj) {
+        if(obj == null) return false;
+        if(obj instanceof BinaryData){
+            this.data = ((BinaryData) obj).data;
+            return true;
+        }
+        return super.equals(obj);
+    }
+
+    @Override
+    public String toString() {
+        return Hex.toHexString(CryptoUtil.listTobyte(data));
+    }
 }

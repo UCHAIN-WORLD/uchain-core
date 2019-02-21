@@ -1,19 +1,13 @@
 package com.uchain.network.message;
 
-import java.math.BigInteger;
-import java.net.InetSocketAddress;
-import java.util.Arrays;
-
 import akka.util.ByteString;
 import com.uchain.core.Block;
-import com.uchain.network.message.BlockMessageImpl.BlockMessage;
-import com.uchain.network.message.BlockMessageImpl.GetBlocksMessage;
-import com.uchain.network.message.BlockMessageImpl.GetDataMessage;
-import com.uchain.network.message.BlockMessageImpl.InventoryMessage;
-import com.uchain.network.message.BlockMessageImpl.VersionMessage;
-
+import com.uchain.network.message.BlockMessageImpl.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.math.BigInteger;
+import java.net.InetSocketAddress;
 
 @Getter
 @Setter
@@ -42,12 +36,18 @@ public class MessagePack {
 			case Block:
 				packMessage = new BlockMessage(Block.fromBytes(data.toArray()));
 				break;
+            case Blocks:
+                packMessage = new BlocksMessage(BlocksPayload.fromBytes(data.toArray()));
+                break;
 			case Inventory:
 				packMessage = new InventoryMessage(InventoryPayload.fromBytes(data.toArray()));
 				break;
 			case Getdata:
-				packMessage = new GetDataMessage(Inventory.fromBytes(data.toArray()));
+				packMessage = new GetDataMessage(InventoryPayload.fromBytes(data.toArray()));
 				break;
+            case Transactions:
+                packMessage = new TransactionsMessage(TransactionsPayload.fromBytes(data.toArray()));
+                break;
 		default:
 			break;
 		}

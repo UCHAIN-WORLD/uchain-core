@@ -8,15 +8,6 @@ import lombok.val;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import com.uchain.common.Serializable.*;
-/* *************************************************************
- * Copyright  2018 APEX Technologies.Co.Ltd. All rights reserved.
- *
- * FileName: Asset
- *
- * @Author: bridge.bu@chinapex.com: 2018/9/20 15:34
- *
- * @Version: 1.0
- * *************************************************************/
 
 public class Asset implements Identifier<UInt256>{
 /*

@@ -1,22 +1,13 @@
 package com.uchain.common;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.uchain.crypto.Fixed8;
-import com.uchain.crypto.UInt256;
-
+import com.uchain.crypto.*;
+import com.uchain.util.Utils;
 import lombok.val;
+
+import java.io.*;
+import java.util.*;
 
 public class Serializabler {
 
@@ -25,6 +16,7 @@ public class Serializabler {
 	static{
 		mapper = new ObjectMapper();
 		mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+		mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
 	}
 
 	public static String  JsonMapperTo(Object object) throws IOException{
@@ -61,7 +53,7 @@ public class Serializabler {
 	}
 
 	public static void writeByteArray(DataOutputStream os, byte[] bytes) throws IOException {
-		os.writeInt(bytes.length);
+        Utils.writeVarint(bytes.length,os);
 		os.write(bytes);
 	}
 
@@ -85,15 +77,24 @@ public class Serializabler {
 	}
 
 	public static void writeMap(DataOutputStream os, Map<UInt256, Fixed8> map) throws IOException {
-		os.writeInt(map.size());
+		Utils.writeVarint(map.size(),os);
+		map.forEach((key, value) -> {
+			key.serialize(os);
+			value.serialize(os);
+		});
+	}
+
+	public static <K extends Serializable,V extends Serializable> void writeMap(DataOutputStream os, Map<K,V> map,Boolean flag) throws IOException {
+		Utils.writeVarint(map.size(),os);
 		map.forEach((key, value) -> {
 			key.serialize(os);
 			value.serialize(os);
 		});
 	}
 	
-	public static byte[] readByteArray(DataInputStream is) throws IOException {
-		byte[] data = new byte[is.readInt()];
+	public synchronized static byte[] readByteArray(DataInputStream is) throws IOException {
+		int length = Utils.readVarInt(is).intValue();
+		byte[] data = new byte[length];
 		Arrays.fill(data, (byte)0);
 		is.read(data, 0, data.length);
 		return data;
@@ -103,5 +104,38 @@ public class Serializabler {
 		return new String(readByteArray(is), "UTF-8");
 	}
 
+	public static Map<UInt256, Fixed8> readMap(DataInputStream is,boolean flag) throws Exception{
+		Map<UInt256, Fixed8> byteMap = new HashMap<>();
+		val value = Utils.readVarInt(is);
+		for(int i = 0; i< value; i++){
+			byteMap.put(UInt256.deserialize(is), Fixed8.deserialize(is));
+		}
+		return byteMap;
+	}
 
+	public static Map<byte[], byte[]> readMap(DataInputStream is) throws Exception{
+		Map<byte[], byte[]> byteMap = new HashMap<>();
+		val value = Utils.readVarInt(is);
+		for(int i = 1; i<= value; i++){
+			byteMap.put(readByteArray(is), readByteArray(is));
+		}
+		return byteMap;
+	}
+
+	public static <T extends Serializable> T readObj(DataInputStream is,/*T t*/String str){
+		/*if(t instanceof UInt256){
+			return (T)UInt256.deserialize(is);
+		}
+		else if(t instanceof UInt160){
+			return (T)UInt160.deserialize(is);
+		}*/
+
+		if("256" == str){
+			return (T)UInt256.deserialize(is);
+		}
+		else if("160" == str){
+			return (T)UInt160.deserialize(is);
+		}
+		return null;
+	}
 }

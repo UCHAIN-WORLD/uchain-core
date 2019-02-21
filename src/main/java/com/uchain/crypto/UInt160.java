@@ -10,8 +10,7 @@ import java.util.Arrays;
 public class UInt160 extends UIntBase /*implements Ordered*/ {
 
     public String toAddressString() {
-//        return Wallet.toAddress(super.data());
-        return "";
+        return PublicKeyHash.toAddress(getData());
     }
 
     public UInt160(byte []data) {

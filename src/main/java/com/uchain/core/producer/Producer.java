@@ -3,168 +3,187 @@ package com.uchain.core.producer;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
-import com.uchain.core.Block;
+import akka.actor.Scheduler;
 import com.uchain.core.BlockChain;
-import com.uchain.core.Transaction;
-import com.uchain.core.producer.ProduceStateImpl.*;
-import com.uchain.crypto.BinaryData;
-import com.uchain.crypto.PrivateKey;
-import com.uchain.crypto.PublicKey;
-import com.uchain.crypto.UInt256;
+import com.uchain.core.producer.ProduceStateImpl.ProducerStopMessage;
 import com.uchain.main.ConsensusSettings;
 import com.uchain.main.Witness;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import scala.concurrent.duration.FiniteDuration;
 
-import java.math.BigInteger;
-import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class Producer extends AbstractActor {
+    private static final Logger log = LoggerFactory.getLogger(Producer.class);
+    private ConsensusSettings settings;
+    private Scheduler scheduler = getContext().system().scheduler();
+    private ActorRef node = getContext().getParent();
 
-	private ConsensusSettings settings;
-	private ActorRef peerManager;
-	private BlockChain chain;
+    private int blocksPerRound;
+    private int minProducingTime;
+    private int earlyMS;
 
-	public Producer(ConsensusSettings settings, BlockChain chain, ActorRef peerManager) {
-		this.settings = settings;
-		this.peerManager = peerManager;
-		this.chain = chain;
-	}
+    private FiniteDuration delayOneBlock;
+    private FiniteDuration noDelay;
+    private boolean enableProduce = false;
 
-	public static Props props(ConsensusSettings settings, BlockChain chain, ActorRef peerManager) {
-		return Props.create(Producer.class, settings, chain, peerManager);
-	}
+    public static Props props(ConsensusSettings settings) {
+        return Props.create(Producer.class, settings);
+    }
 
-	private Map<UInt256, Transaction> txPool = new HashMap<UInt256, Transaction>();
-	private boolean canProduce = false;
+    public Producer(ConsensusSettings settings) {
+        this.settings = settings;
+        blocksPerRound = settings.getWitnessList().size() * settings.getProducerRepetitions();
+        minProducingTime = settings.getProduceInterval() / 10;
+        earlyMS = settings.getProduceInterval() / 5;
+        delayOneBlock = blockDuration(1);
+        noDelay = blockDuration(0);
+        scheduleBegin(null);
+    }
 
-	@Override
-	public void preStart() throws Exception {
-		ProduceTask task = new ProduceTask(this, peerManager, canProduce);
-		getContext().system().scheduler().scheduleOnce(Duration.ZERO, task, getContext().system().dispatcher());
-	}
+    @Override
+    public Receive createReceive() {
+        return receiveBuilder().match(ProducerStopMessage.class, msg -> {
+            log.info("stopping producer task");
+            getContext().stop(getSelf());
+        }).build();
+    }
 
-	/**
-	 * 同步最新的区块完后开始加入生产区块
-	 * @return
-	 */
-	 public ProduceState produce() {
-		 try {
-			 Long now = Instant.now().toEpochMilli(); //精确到毫秒
-			 if(canProduce) {
-				 return tryProduce(now);
-			 }else {
-				 Long next = nextBlockTime(1);
-				 if (next >= now) {
-					 canProduce = true;
-					 return tryProduce(now);
-				 }else {
-					 return new NotSynced(next, now);
-				 }
-			 }
-		 }catch(Exception e) {
-			 return new Failed(e);
-		 }
-	 }
+    /**
+     * 调度开始生产区块
+     * @param duration
+     */
+    private void scheduleBegin(FiniteDuration duration) {
+        FiniteDuration dur;
+        if (duration != null) {
+            dur = duration;
+        } else {
+            dur = noDelay;
+        }
+        ProduceTaskBegin produceTaskBegin = this::beginProduce;
+        //执行一次调度
+        scheduler.scheduleOnce(dur, node, produceTaskBegin, getContext().system().dispatcher(), ActorRef.noSender());
+    }
 
-	 /**
-	  * 满足时间，且此刻轮训到当前节点，开始生产区块
-	  * @param now
-	  * @return
-	  */
-	private ProduceState tryProduce(Long now) {
-		Long next = nextBlockTime(1);
-		if (now + settings.getAcceptableTimeError() < next) {
-			return new NotYet(next,now);
-		}else {
-		    Witness witness = getWitness(nextProduceTime(now, next));
-		    if("".equals(witness.getPrivkey())) {
-		    	return new NotMyTurn(witness.getName(), PublicKey.apply(new BinaryData(witness.getPubkey())));
-		    }else {
-				Collection<Transaction> valueCollection = txPool.values();
-				List<Transaction> txs = new ArrayList<>(valueCollection);
-				Block block = chain.produceBlock(PublicKey.apply(new BinaryData(witness.getPubkey())),
-						PrivateKey.apply(new BinaryData(witness.getPrivkey())), nextProduceTime(now, next), txs);
-				txPool.clear();
-				return new Success(block, witness.getName(), now);
-		    }
-		}
-	}
-	
-	/**
-	 * 根据上一个区块时间，获取下一个区块期望时间
-	 * @param nextN
-	 * @return
-	 */
-	private Long nextBlockTime(int nextN) {
-		if(nextN == 0) nextN =1;
-		long headTime = chain.getLatestHeader().getTimeStamp();
-		long slot = headTime / settings.getProduceInterval(); //ProduceInterval 生成区块间隔时间
-		slot += nextN;
-		return slot * settings.getProduceInterval();
-	}
-	
-	/**
-	 * 下一个区块生产时间
-	 * @param now
-	 * @param next
-	 * @return
-	 */
-	private Long nextProduceTime(Long now,Long next) {
-		if (now <= next) {
-			return next;
-		}else {
-			long slot = now / settings.getProduceInterval();
-			return slot * settings.getProduceInterval();
-		}
-	}
-	/**
-	 * 获取给定时间点的生产者
-	 * @param timeMs time from 1970 in ms
-	 * @return
-	 */
-	private Witness getWitness(Long timeMs) {
-		long slot = timeMs / settings.getProduceInterval();
-		long index = slot % (settings.getWitnessList().size() * settings.getProducerRepetitions());
-		index /= settings.getProducerRepetitions();
-		return settings.getWitnessList().get((int)index); //获取
-	}
-	
-	/**
-	 * 洗牌
-	 * @param nowSec
-	 * @param witnesses
-	 * @return
-	 */
-	private Witness[] updateWitnessSchedule(Long nowSec, Witness[] witnesses) {
-		Witness[] newWitness = witnesses;
-		BigInteger nowHi = new BigInteger(nowSec.toString()).shiftLeft(32); // this << n
-		BigInteger param = new BigInteger("2685821657736338717");
-		int witnessNum = newWitness.length;
-		for (int i = 0; i < witnessNum; i++) {
-			BigInteger ii = BigInteger.valueOf(i);
-			BigInteger k = ii.multiply(param).add(nowHi);
-			k = k.xor(k.shiftRight(12));
-			k = k.xor(k.shiftLeft(25));
-			k = k.xor(k.shiftRight(27));
-			k = k.multiply(param);
+    private void scheduleEnd(FiniteDuration duration) {
+        FiniteDuration dur;
+        if (duration != null) {
+            dur = duration;
+        } else {
+            dur = noDelay;
+        }
+        ProduceTaskEnd produceTaskEnd = this::endProduce;
+        scheduler.scheduleOnce(dur, node, produceTaskEnd, getContext().system().dispatcher(), ActorRef.noSender());
+    }
 
-			int jmax = newWitness.length - i;
-			int j = k.remainder(BigInteger.valueOf(jmax)).add(ii).intValue();
+    private void beginProduce(BlockChain chain) {
+        if (!maybeProduce(chain)) {
+            scheduleBegin(delayOneBlock);
+        }
+    }
 
-			Witness a = newWitness[i];
-			Witness b = newWitness[j];
-			newWitness[i] = b;
-			newWitness[j] = a;
-		}
-		return newWitness;
-	}
+    /**
+     * 产生块后继续轮训产生块
+     * @param chain
+     */
+    private void endProduce(BlockChain chain) {
+        chain.produceBlockFinalize(Instant.now().toEpochMilli());
+        scheduleBegin(null);
+    }
 
-	@Override
-	public Receive createReceive() {
-		return receiveBuilder().match(Object.class, msg -> {
-		}).build();
-	}
+    private boolean maybeProduce(BlockChain chain) {
+        try {
+            if (enableProduce) {
+                producing(chain);
+                return true;
+            } else if (Instant.now().toEpochMilli() <= nextTime(chain.getHeadTime())) {
+                enableProduce = true;
+                producing(chain);
+                return true;
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
+            log.debug("begin produce failed", e);
+            return false;
+        }
+    }
+
+    /**
+     * 开始生产区块
+     * @param chain
+     */
+    private void producing(BlockChain chain) {
+        long headTime = chain.getHeadTime();
+        long now = Instant.now().toEpochMilli();
+        if (headTime - now > settings.getProduceInterval()) {
+            scheduleBegin(delayOneBlock);
+        } else {
+            long next = nextBlockTime(headTime, now);
+            Witness witness = getWitness(next);
+            if (witness.getPrivkey().isEmpty()) {//私钥为空，没有轮到执行窗口
+                FiniteDuration delay = calcDelay(Instant.now().toEpochMilli(), next);
+                scheduleBegin(delay);
+            } else {//产生区块后继续轮训
+                chain.startProduceBlock(witness, next);
+                FiniteDuration delay = calcDelay(Instant.now().toEpochMilli(), next);
+                scheduleEnd(delay);
+            }
+        }
+    }
+
+    /**
+     * 获取下一个区块期望时间
+     *
+     * @param headTime
+     * @param now
+     * @return
+     */
+    private long nextBlockTime(long headTime, long now) {
+        long next = nextTime(Math.max(headTime, now));
+        if (next - now < minProducingTime) {
+            next += settings.getProduceInterval();
+        }
+        return next;
+    }
+
+    private long nextTime(long time) {
+        return time + settings.getProduceInterval() - time % settings.getProduceInterval();
+    }
+
+    private FiniteDuration calcDelay(long now, long next) {
+        long delay = next - now;
+        // produce last block in advance
+        Integer rest = restBlocks(next);
+        if (rest == 1) {
+            if (delay < earlyMS) {
+                delay = 0;
+            } else {
+                delay = delay - earlyMS;
+            }
+        }
+        return calcDuration(Math.toIntExact(delay));
+    }
+
+    private Integer restBlocks(long time) {
+        return Math.toIntExact(settings.getProducerRepetitions() - time / settings.getProduceInterval() % settings.getProducerRepetitions());
+    }
 
 
+    private FiniteDuration blockDuration(Integer blocks) {
+        return new FiniteDuration(blocks * settings.getProduceInterval() * 1000, TimeUnit.MICROSECONDS);
+    }
+
+    private FiniteDuration calcDuration(Integer delay) {
+        return new FiniteDuration(delay * 1000, TimeUnit.MICROSECONDS);
+    }
+
+
+    private Witness getWitness(long time) {
+        long slot = time / settings.getProduceInterval() % blocksPerRound;
+        long index = slot / settings.getProducerRepetitions();
+        return settings.getWitnessList().get((int) index);
+    }
 }

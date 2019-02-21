@@ -1,7 +1,7 @@
 package com.uchain.core.datastore;
 
 public enum StateType {
-	HeadBlock(0x00), Producer(0x01);
+	HeadBlock(0x00), Producer(0x01), LatestConfirmed(0x02),SwitchState(0x03);
 	private int value;
 
 	private StateType(int value) {

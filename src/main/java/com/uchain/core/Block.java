@@ -1,5 +1,17 @@
 package com.uchain.core;
 
+import com.fasterxml.jackson.annotation.*;
+import com.uchain.common.Serializabler;
+import com.uchain.crypto.MerkleTree;
+import com.uchain.crypto.UInt160;
+import com.uchain.crypto.UInt256;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.val;
+import play.api.libs.json.JsValue;
+import play.api.libs.json.Json;
+import play.api.libs.json.Writes;
+
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -8,35 +20,32 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.uchain.common.Serializabler;
-import com.uchain.crypto.UInt160;
-import com.uchain.crypto.UInt256;
-
-import lombok.Getter;
-import lombok.Setter;
-import lombok.val;
+import java.util.stream.Collectors;
 
 @Setter
 @Getter
 public class Block implements Identifier<UInt160>{
     private BlockHeader header;
-
-    private List<Transaction> transactions;
-
+    private List<Transaction> transactions =new ArrayList<>();
+    @JsonIgnore
+    private UInt256 id;
+    @JsonIgnore
     private Map<UInt256, Transaction> txMp = new HashMap<>();
 
     public Block (BlockHeader header, List<Transaction> transactions){
         this.header = header;
-        this.transactions = transactions;
-        transactions.forEach(transaction -> {
-            txMp.put(transaction.id(), transaction);
+        this.transactions.addAll(transactions);
+        transactions.forEach(tx ->{
+            txMp.put(tx.id(),tx);
         });
     }
 
+    @JsonInclude
     public UInt256 id(){
         return header.id();
     }
+
+    public String shortId() { return header.shortId(); }
 
     public int height(){
         return header.getIndex();
@@ -50,6 +59,10 @@ public class Block implements Identifier<UInt160>{
         return header.getTimeStamp();
     }
 
+    public UInt256 merkleRoot() {
+        return  MerkleTree.root(transactions.stream().map(tx -> tx.getId()).collect(Collectors.toList()));
+    }
+
     public Transaction getTransaction(UInt256 id){
         return txMp.get(id);
     }
@@ -57,15 +70,6 @@ public class Block implements Identifier<UInt160>{
     public Transaction getTransaction(int index){
         if (index < 0 || index >= transactions.size()) return null;
         return transactions.get(index);
-    }
-
-    public ArrayList<UInt256> getTransactionIds(){
-        val size = transactions.size();
-        val ids = new ArrayList<UInt256>(size);
-        transactions.forEach(transaction -> {
-            ids.add(transaction.id());
-        });
-        return ids;
     }
 
     @Override
@@ -99,4 +103,27 @@ public class Block implements Identifier<UInt160>{
 		}
 		return null;
     }
+
+    public static Block build(BlockHeader header, List<Transaction> txs){
+        return new Block(header, txs);
+    }
+
+    public static Writes<Block> writes() {
+        Writes<Block> blockWrites = new Writes<Block>() {
+            @Override
+            public JsValue writes(Block o) {
+                String txsJson = "";
+                for (Transaction tx : o.transactions) {
+                    txsJson += Json.toJson(tx, Transaction.writes()) + ",";
+                }
+                txsJson += "";
+                return Json.parse("{\"header\" : "
+                        + Json.toJson(o.header, BlockHeader.writes())
+                        + ",\"transactions\" : "
+                        + txsJson + "}");
+            }
+        };
+        return blockWrites;
+    }
+
 }

@@ -6,6 +6,7 @@ import org.bouncycastle.math.ec.ECPoint;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -35,6 +36,10 @@ public class Point implements Serializable{
 
     public Point multiply(Scalar scalar) {
         return new Point(getValue().multiply(scalar.getValue()));
+    }
+
+    public Point multiply(BigInteger scalar) {
+        return new Point(getValue().multiply(scalar));
     }
 
     public void normalize() {

@@ -6,7 +6,10 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class UInt256 extends UIntBase {
+public class UInt256 extends UIntBase implements Comparable<UInt256>{
+
+    public static UInt256 assetId = new UInt256(new byte[]{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0});
+
     public UInt256(byte[] data) {
 		super(UIntUtil.UInt256_Size, data);
 	}
@@ -61,5 +64,40 @@ public class UInt256 extends UIntBase {
         return fromBytes(data);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if(o == null) return false;
+        if(this == o) return true;
+        else {
+            boolean flag = true;
+            if(o.getClass() == UInt256.class){
+                byte[] compareData = ((UInt256) o).getData();
+                byte[] data = getData();
+                if(data.length == compareData.length){
+                    for(int i = 0; i < data.length; i++){
+                        if(data[i] != compareData[i])
+                            flag = false;
+                    }
+                }
+                else flag = false;
+            }
+            else flag = false;
+            return flag;
+        }
+    }
 
+    @Override
+    public int compareTo(UInt256 o) {
+        return UIntBaseCompare.compare(this, o);
+    }
+
+    //    @Override
+//    public int hashCode() {
+//        return super.hashCode();
+//    }
+//
+//    @Override
+//    public boolean equals(Object o) {
+//        return super.equals(o);
+//    }
 }

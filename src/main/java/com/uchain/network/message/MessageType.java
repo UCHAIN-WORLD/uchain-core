@@ -1,7 +1,7 @@
 package com.uchain.network.message;
 
 public enum MessageType {
-	Version(0), BlockProduced(1), GetBlocks(2), Block(3), Inventory(4), Getdata(5);
+	Version(0), BlockProduced(1), GetBlocks(2), Block(3), Blocks(4), Inventory(5),Getdata(6), Transactions(7), RPCCommand(8);
 	private int value;
 
 	private MessageType(int value) {

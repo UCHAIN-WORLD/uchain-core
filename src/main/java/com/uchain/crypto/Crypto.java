@@ -8,6 +8,7 @@ import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -68,6 +69,18 @@ public final class Crypto{
         PublicKey publicKey = PublicKey.apply(new BinaryData(CryptoUtil.byteToList(pubKey)));
 
         return new Ecdsa().verifySignature(new BinaryData(CryptoUtil.byteToList(sha256(message))), new BinaryData(CryptoUtil.byteToList(signature)), publicKey);
+    }
+
+    public static boolean verifySignature(byte[] message, BinaryData signature) {
+        List<PublicKey> publicKeys = recoverPublicKey(signature,message);
+
+        return new Ecdsa().verifySignature(new BinaryData(CryptoUtil.byteToList(sha256(message))), signature, publicKeys.get(0))
+                && new Ecdsa().verifySignature(new BinaryData(CryptoUtil.byteToList(sha256(message))), signature, publicKeys.get(1));
+    }
+
+    public static List<PublicKey> recoverPublicKey(BinaryData signature, byte[] message) {
+        return new Ecdsa().recoverPublicKey(signature,
+                sha256(message));
     }
 
     public static byte[] AesEncrypt(byte []data, byte []key, byte []iv) {

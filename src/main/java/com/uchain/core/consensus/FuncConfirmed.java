@@ -1,0 +1,1 @@
+package com.uchain.core.consensus;import com.uchain.core.Block;@FunctionalInterfacepublic interface FuncConfirmed {    void onConfirmed(Block block);}

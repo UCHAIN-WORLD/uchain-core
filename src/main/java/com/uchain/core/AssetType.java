@@ -1,13 +1,4 @@
 package com.uchain.core;
-/* *************************************************************
- * Copyright  2018 APEX Technologies.Co.Ltd. All rights reserved.
- *
- * FileName: AssetType
- *
- * @Author: bridge.bu@chinapex.com: 2018/9/20 15:58
- *
- * @Version: 1.0
- * *************************************************************/
 
 import lombok.val;
 import scala.Enumeration;

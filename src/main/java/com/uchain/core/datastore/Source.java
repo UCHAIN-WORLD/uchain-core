@@ -1,0 +1,1 @@
+package com.uchain.core.datastore;/** * 数据源的基本接口 * @param <K> * @param <V> */public interface Source<K,V> {    void put(K key, V val);    V get(K key);    void delete(K key);    boolean flush();}

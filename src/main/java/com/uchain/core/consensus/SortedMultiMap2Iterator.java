@@ -27,7 +27,7 @@ public class SortedMultiMap2Iterator<K1,K2,V> implements Iterator<Object>{
 		if(!hasNext())
 			throw new NoSuchElementException();
 		TwoTuple<K2, V> twoTuple = it2.next();
-		ThreeTuple<K1,K2,V> threeTuple = new ThreeTuple<K1,K2,V>(k, twoTuple.first, twoTuple.second);
+		ThreeTuple<K1,K2,V> threeTuple = new ThreeTuple(k, twoTuple.first, twoTuple.second);
 		return threeTuple;
 	}
 

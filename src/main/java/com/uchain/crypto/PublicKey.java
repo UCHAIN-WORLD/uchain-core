@@ -15,8 +15,8 @@ public class PublicKey implements Serializable {
     private Point point;
     private boolean compressed;
 
-    public PublicKey(){
-
+    public PublicKey(Point point){
+        this(point,true);
     }
 
     public PublicKey(Point point, boolean compressed){
@@ -25,17 +25,10 @@ public class PublicKey implements Serializable {
     }
 
     public static PublicKey apply(BinaryData data){
-        if (data.getData().size() == 65) {
-            if (data.getData().get(0) == 4) {
-                return new PublicKey(Point.apply(data), false);
-            } else if (data.getData().get(0) == 6 || data.getData().get(0) == 7) {
-                return new PublicKey(Point.apply(data), false);
-            }
-        } else if (data.getData().size() == 33) {
+        if(data.getData().size() == 33){
             if (data.getData().get(0) == 2 || data.getData().get(0) == 3){
                 return new PublicKey(Point.apply(data), true);
             }
-
         }
         throw new IllegalArgumentException();
     }
@@ -52,10 +45,10 @@ public class PublicKey implements Serializable {
          return Crypto.hash160(CryptoUtil.listTobyte(toBin().getData()));
     }
 
-//    @Override
-//    public String toString() {
-//        return new PublicKey().getPoint().toString();
-//    }
+    @Override
+    public String toString() {
+        return toBin().toString();
+    }
 
     public String toAddress() {
     	return PublicKeyHash.toAddress(pubKeyHash().getData());

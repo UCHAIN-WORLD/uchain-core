@@ -1,0 +1,1 @@
+package com.uchain.core;@FunctionalInterfacepublic interface NotificationOnBlock {    void onBlock(Block block);}

@@ -5,6 +5,7 @@ import com.uchain.core.datastore.keyvalue.Converter;
 import com.uchain.crypto.UInt160;
 import com.uchain.storage.LevelDbStorage;
 
+import com.uchain.storage.Storage;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,10 +18,10 @@ public class AccountStore extends StoreBase<UInt160, Account> {
 	private Converter<UInt160> keyConverter;
 	private Converter<Account> valConverter;
 
-	public AccountStore(LevelDbStorage db, int cacheCapacity, byte[] prefixBytes, Converter<UInt160> keyConverter,
-			Converter<Account> valConverter) {
-		super(db, cacheCapacity, prefixBytes, keyConverter, valConverter);
-		this.db = db;
+	public AccountStore(Storage db, int cacheCapacity, byte[] prefixBytes, Converter<UInt160> keyConverter,
+						Converter<Account> valConverter) {
+		super((LevelDbStorage)db, cacheCapacity, prefixBytes, keyConverter, valConverter);
+		this.db = (LevelDbStorage)db;
 		this.cacheCapacity = cacheCapacity;
 		this.prefixBytes = prefixBytes;
 		this.keyConverter = keyConverter;

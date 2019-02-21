@@ -29,6 +29,7 @@ public class UIntBase implements Serializable {
 
     @Override
     public boolean equals(Object o) {
+        if (null == o) return false;
         if (this == o) return true;
         if (!(o instanceof UIntBase)) return false;
         UIntBase uIntBase = (UIntBase) o;
@@ -44,6 +45,10 @@ public class UIntBase implements Serializable {
     @Override
     public String toString() {
         return Hex.toHexString(getData());
+    }
+
+    public String shortString() {
+        return toString().substring(0, 7);
     }
 
     @Override

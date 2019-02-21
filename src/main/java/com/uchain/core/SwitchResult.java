@@ -1,0 +1,1 @@
+package com.uchain.core;import com.uchain.core.consensus.ForkItem;import lombok.AllArgsConstructor;import lombok.Getter;import lombok.Setter;@Getter@Setter@AllArgsConstructorpublic class SwitchResult {    private Boolean succeed;    private ForkItem failedItem;}

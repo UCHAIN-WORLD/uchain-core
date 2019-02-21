@@ -1,14 +1,16 @@
 package com.uchain.core;
 
-import java.util.List;
-import java.util.Map;
-
-import com.uchain.crypto.PrivateKey;
-import com.uchain.crypto.PublicKey;
 import com.uchain.crypto.UInt160;
 import com.uchain.crypto.UInt256;
+import com.uchain.main.Witness;
+import com.uchain.vm.Repository;
+
+import java.math.BigInteger;
+import java.util.Map;
 
 public interface BlockChain extends Iterable<Block>{
+
+    ChainInfo getChainInfo();
 
     BlockHeader getLatestHeader();
 
@@ -17,8 +19,6 @@ public interface BlockChain extends Iterable<Block>{
     long getHeadTime();
 
     long headTimeSinceGenesis();
-
-    long getDistance();
 
     BlockHeader getHeader(UInt256 id);
 
@@ -29,26 +29,44 @@ public interface BlockChain extends Iterable<Block>{
     Block getBlock(int height);
 
     Block getBlock(UInt256 id);
+
+    Boolean containsBlock(UInt256 id);
+
+    Transaction getPendingTransaction(UInt256 txid);
     
-    Block getBlockInForkBase(UInt256 id);
+    void startProduceBlock(Witness producer, long blockTime);
 
-    boolean containsBlock(UInt256 id);
+    boolean produceBlockAddTransaction(Transaction tx);
 
-    boolean tryInsertBlock(Block block);
+    Block produceBlockFinalize(long endTime);
+
+    Boolean isProducingBlock();
+
+    Boolean addTransaction(Transaction tx);
+
+    Boolean addTransactionReceipt(TransactionReceipt transactionReceipt);
+
+    TransactionReceipt getTransactionReceipt(UInt256 id);
+
+    TransactionReceipt executeTransaction(Transaction tx,long stopProcessTxTime);
+
+    Boolean tryInsertBlock(Block block,Boolean doApply);
 
     Transaction getTransaction(UInt256 id);
 
     boolean containsTransaction(UInt256 id);
 
-    boolean verifyBlock(Block block);
+//    boolean verifyBlock(Block block);
+//
+//    boolean verifyTransaction(Transaction tx);
 
-    boolean verifyTransaction(Transaction tx);
+    Map<UInt256, BigInteger> getBalance(UInt160 address);
 
-    Map<UInt256, Long> getBalance(UInt160 address);
-
-    String getGenesisBlockChainId();
-
-    Block produceBlock(PublicKey producer, PrivateKey privateKey, long timeStamp,
-                              List<Transaction> txs);
     Account getAccount(UInt160 address);
+
+    String Id();
+
+    void close();
+
+    Repository getRepository();
 }

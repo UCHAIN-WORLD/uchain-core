@@ -6,6 +6,9 @@ import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.math.BigInteger;
+import java.util.List;
+import java.util.Random;
 
 import static org.junit.Assert.*;
 
@@ -77,11 +80,47 @@ public class CryptoTest {
         // 32+1=33 bytes compressed pub key
         BinaryData pubKey = new BinaryData("0292df7b245b81aa637ab4e867c8d511008f79161a97d64f2ac709600352f7acbc");
 
-        boolean verifyResult = Crypto.verifySignature(message, CryptoUtil.listTobyte(sig.getData()), CryptoUtil.listTobyte(pubKey.getData()));
+        List<PublicKey> pubs1 = new Ecdsa().recoverPublicKey(sig, Crypto.sha256(message));
+        List<PublicKey> pubs2 = Crypto.recoverPublicKey(sig, message);
 
-        System.out.println(verifyResult);
+        assert(Crypto.verifySignature(message, CryptoUtil.listTobyte(sig.getData()), CryptoUtil.listTobyte(pubKey.getData())));
+        assert(Crypto.verifySignature(message, CryptoUtil.listTobyte(sig.getData()), CryptoUtil.binaryData2array(pubs1.get(0).toBin())));
+        assert(Crypto.verifySignature(message, CryptoUtil.listTobyte(sig.getData()), CryptoUtil.binaryData2array(pubs1.get(1).toBin())));
+        assert(Crypto.verifySignature(message, CryptoUtil.listTobyte(sig.getData()), CryptoUtil.binaryData2array(pubs2.get(0).toBin())));
+        assert(Crypto.verifySignature(message, CryptoUtil.listTobyte(sig.getData()), CryptoUtil.binaryData2array(pubs2.get(1).toBin())));
+        assert(Crypto.verifySignature(message, sig));
     }
+    /*@Test
+    def testSign2 = {
+            val privKey = Ecdsa.PrivateKey(BinaryData("f8b8af8ce3c7cca5e300d33939540c10d45ce001b8f252bfbc57ba0342904181"))
+            val pubkey = privKey.publicKey
+            val message = "Alan Turing".getBytes("US-ASCII")
+            val sig = Crypto.sign(message, privKey)
+    assert(sig sameElements BinaryData("304402207063ae83e7f62bbb171798131b4a0564b956930092b33b07b395615d9ec7e15c022058dfcc1e00a35e1572f366ffe34ba0fc47db1e7189759b9fb233c5b05ab388ea"))
 
+}*/
+    @Test
+    public void testRecoverPublicKey() {
+        Random random = new Random();
+        byte[] privbytes = new byte[32];
+        byte[] message = new byte[32];
+        for (int i =0;i< 10;i++) {
+        random.nextBytes(privbytes);
+        random.nextBytes(message);
+
+        PrivateKey priv = PrivateKey.apply(new BinaryData(CryptoUtil.byteToList(privbytes)));
+        PublicKey pub = priv.publicKey();
+        List<BigInteger> pubrs = new Ecdsa().sign(new BinaryData(CryptoUtil.byteToList(message)), priv);
+        BinaryData sigBin = new Ecdsa().encodeSignature(pubrs.get(0), pubrs.get(1));
+        List<PublicKey> pubs2 = new Ecdsa().recoverPublicKey(sigBin, message);
+        List<PublicKey> pubs = new Ecdsa().recoverPublicKey(pubrs, message);
+
+        assert(new Ecdsa().verifySignature(CryptoUtil.byteToList(message), pubrs, pubs.get(0)));
+        assert(new Ecdsa().verifySignature(CryptoUtil.byteToList(message), pubrs, pubs.get(1)));
+        assert(pub.equals(pubs.get(0)) || pub.equals(pubs.get(1)));
+        assert(pub.equals(pubs2.get(0)) || pub.equals(pubs2.get(1)));
+        }
+        }
     @Test
     public void testBase58() {
         //  00  f54a5851e9372b87810a8e60cdd2e7cfd80b6e31  c7f18fe8

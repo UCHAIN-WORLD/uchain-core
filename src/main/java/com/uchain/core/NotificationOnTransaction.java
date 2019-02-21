@@ -1,0 +1,1 @@
+package com.uchain.core;@FunctionalInterfacepublic interface NotificationOnTransaction {    void onTransaction(Transaction trx);}

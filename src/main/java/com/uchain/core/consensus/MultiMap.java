@@ -1,11 +1,10 @@
 package com.uchain.core.consensus;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
+import java.util.List;
+import java.util.Map;
 
 public class MultiMap<K,V> implements Iterable<Object>{
 	private Map<K, List<V>> container = Maps.newHashMap();
@@ -44,6 +43,6 @@ public class MultiMap<K,V> implements Iterable<Object>{
 		return iterator().next();
 	}
     public MultiMapIterator<K,V> iterator() {
-    	return new MultiMapIterator<K, V>(container);
+    	return new MultiMapIterator(container);
     }
 }

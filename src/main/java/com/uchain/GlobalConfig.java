@@ -1,0 +1,1 @@
+package com.uchain;public class GlobalConfig {    public static String genesisBlockChainId = "";}

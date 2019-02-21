@@ -1,447 +1,649 @@
 package com.uchain.core;
 
-import com.uchain.common.Serializabler;
-import com.uchain.core.consensus.ForkBase;
-import com.uchain.core.consensus.ForkItem;
-import com.uchain.core.consensus.TwoTuple;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.uchain.core.consensus.*;
 import com.uchain.core.datastore.*;
-import com.uchain.core.datastore.keyvalue.*;
+import com.uchain.core.datastore.keyvalue.ProducerStatus;
+import com.uchain.core.producer.ProducerUtil;
 import com.uchain.crypto.*;
 import com.uchain.main.Settings;
-import com.uchain.storage.ConnFacory;
-import com.uchain.storage.LevelDbStorage;
+import com.uchain.main.Witness;
+import com.uchain.network.Node;
+import com.uchain.util.ByteUtil;
+import com.uchain.vm.GasCost;
+import com.uchain.vm.Repository;
+import com.uchain.vm.repository.RepositoryRoot;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;
-import org.iq80.leveldb.WriteBatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.math.BigInteger;
+import java.time.Instant;
+import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.uchain.util.BIUtil.toBI;
 
 @Getter
 @Setter
-public class LevelDBBlockChain implements BlockChain{
-	private static final Logger log = LoggerFactory.getLogger(LevelDBBlockChain.class);
-    private LevelDbStorage db;
+public class LevelDBBlockChain implements BlockChain {
+    private static final Logger log = LoggerFactory.getLogger(LevelDBBlockChain.class);
     private Settings settings;
     private ForkBase forkBase;
-    
+
     private PublicKey genesisProducer;
     private PrivateKey genesisProducerPrivKey;
-    
+
     private HeaderStore headerStore;
     private HeightStore heightStore;
     private TransactionStore txStore;
     private AccountStore accountStore;
     private BlkTxMappingStore blkTxMappingStore;
-    private HeadBlockStore headBlkStore;
+    private HeadBlockDataStore headBlkStore;
     private NameToAccountStore nameToAccountStore;
     private ProducerStateStore prodStateStore;
     private PublicKey minerCoinFrom;
     private Fixed8 minerAward;
-    private UInt160 genesisMinerAddress;
-    private Transaction genesisTx;
-    private BlockHeader genesisBlockHeader;
+    private Fixed8 minerFee = Fixed8.Zero;
+    private UInt160 genesisCoinToAddress;
+    //    private Transaction genesisTx;
+//    private BlockHeader genesisBlockHeader;
     private Block genesisBlock;
     private BlockHeader latestHeader;
     private ProducerStatus latestProdState;
-    LevelDBBlockChain(Settings settings){
-    	this.db = ConnFacory.getInstance(settings.getChainSettings().getChain_dbDir());
-    	this.settings = settings;
-    	forkBase = new ForkBase(settings);
+    private BlockBase blockBase;
+    private DataBase dataBase;
+    private TransactionSummaryBase transactionReceiptBase;
+    private List<Transaction> pendingTxs = Lists.newArrayList();
+    private Map<UInt256, Transaction> unapplyTxs = new HashMap<>();
+    private TreeMap<UInt256, TransactionReceipt> txReceipts = new TreeMap<>();
+    private PendingState pendingState;
+    private NotificationOnBlock notificationOnBlock;
+    private NotificationOnTransaction notificationOnTransaction;
+    private Node nodeActor;
+    private Repository repository;
+
+    LevelDBBlockChain(Settings settings, NotificationOnBlock notificationOnBlock, NotificationOnTransaction notificationOnTransaction, Node node) {
+        this.settings = settings;
+        this.notificationOnBlock = notificationOnBlock;
+        this.notificationOnTransaction = notificationOnTransaction;
+        this.nodeActor = node;
         genesisProducer = PublicKey.apply(new BinaryData(settings.getChainSettings().getChain_genesis_publicKey())); // TODO: read from settings
         genesisProducerPrivKey = new PrivateKey(Scalar.apply(new BinaryData(settings.getChainSettings().getChain_genesis_privateKey())));
 
-        headerStore = new HeaderStore(db, 10, DataStoreConstant.HeaderPrefix,
-                new UInt256Key(), new BlockHeaderValue());
-        heightStore = new HeightStore(db, 10, DataStoreConstant.HeightToIdIndexPrefix,
-                new IntKey(), new UInt256Value());
-        txStore = new TransactionStore(db, 10, DataStoreConstant.TxPrefix,
-                new UInt256Key(), new TransactionValue());
-        accountStore = new AccountStore(db, 10, DataStoreConstant.AccountPrefix,
-                new UInt160Key(), new AccountValue());
-        blkTxMappingStore = new BlkTxMappingStore(db, 10,
-                DataStoreConstant.BlockIdToTxIdIndexPrefix, new UInt256Key(), new BlkTxMappingValue());
-        headBlkStore = new HeadBlockStore(db, DataStoreConstant.HeadBlockStatePrefix,
-                new HeadBlockValue());
-        nameToAccountStore = new NameToAccountStore(db, 10,
-                DataStoreConstant.NameToAccountIndexPrefix,new StringKey(),new UInt160Key());
-        prodStateStore = new ProducerStateStore(db,  DataStoreConstant.ProducerStatePrefix,
-                new ProducerStatusValue());
+        blockBase = new BlockBase(settings.getChainSettings().getBlockBaseSettings());
+        dataBase = new DataBase(settings.getChainSettings().getDataBaseSettings());
+        transactionReceiptBase = new TransactionSummaryBase(settings.getTransactionSummarySettings());
+        FuncConfirmed funcConfirmed = this::onConfirmed;
+
+        FuncOnSwitch funcOnSwitch = this::onSwitch;
+
+        forkBase = new ForkBase(settings, funcConfirmed, funcOnSwitch);
 
         // TODO: folkBase is todo
         // TODO: zero is not a valid pub key, need to work out other method
-        minerCoinFrom = PublicKey.apply(new BinaryData(settings.getChainSettings().getChain_miner()));   // 33 bytes pub key
-        minerAward = Fixed8.Ten;
+        minerCoinFrom = PublicKey.apply(new BinaryData(settings.getChainSettings().getMinerCoinFrom()));   // 33 bytes pub key
+        minerAward = Fixed8.fromDouble(settings.getChainSettings().getMinerAward());
 
-        genesisMinerAddress = UInt160.parse("f54a5851e9372b87810a8e60cdd2e7cfd80b6e31");
+        /*genesisCoinToAddress = PublicKeyHash.fromAddress(settings.getChainSettings().getCoinToAddr());
         genesisTx = new Transaction(TransactionType.Miner, minerCoinFrom,
-                genesisMinerAddress, "", minerAward, UInt256.Zero(), 0L,
-                CryptoUtil.array2binaryData(BinaryData.empty),CryptoUtil.array2binaryData(BinaryData.empty),0x01,null);
+                genesisCoinToAddress, "", minerAward, UInt256.Zero(), 0L,
+                settings.getConsensusSettings().fingerprint(),CryptoUtil.array2binaryData(BinaryData.empty),0x01,null);
 
         genesisBlockHeader =  BlockHeader.build(0, settings.getChainSettings().getChain_genesis_timeStamp(),
-                UInt256.Zero(), UInt256.Zero(), genesisProducer, genesisProducerPrivKey);
+                MerkleTree.root(Lists.newArrayList(genesisTx.getId())), UInt256.Zero(), genesisProducer, genesisProducerPrivKey);
 
-        genesisBlock = new Block(genesisBlockHeader,Transaction.transactionToArrayList(genesisTx));
+        genesisBlock = Block.build(genesisBlockHeader, Transaction.transactionToArrayList(genesisTx));
+        latestHeader= genesisBlockHeader;*/
+        genesisBlock = buildGenesisBlock();
+        latestHeader = genesisBlock.getHeader();
+//        List<Transaction> pendingTxs = Lists.newArrayList();  // TODO: save to DB?
+//        Map<UInt256, Transaction> unapplyTxs = Maps.newHashMap();  // TODO: save to DB?
 
-        latestHeader= genesisBlockHeader;
+        pendingState = new PendingState();
 
-        HeadBlock headBlockStore = headBlkStore.get();
-        if(headBlockStore == null)
-            latestHeader = reInit();
-        else
-            latestHeader = init(headBlockStore);
+        repository = new RepositoryRoot(forkBase, dataBase, blockBase);
 
+        populate();
+    }
+
+    private Block buildGenesisBlock() {
+        List<Transaction> genesisTxs = new ArrayList<>();
+
+        this.settings.getChainSettings().getCoinAirdrops().forEach(airdrop ->
+                genesisTxs.add(new Transaction(TransactionType.Genesis, minerCoinFrom.pubKeyHash(),
+                        PublicKeyHash.fromAddress(airdrop.getAddr()), "", Fixed8.fromDouble(airdrop.getCoins()),
+                        UInt256.Zero(), 0L, this.settings.getConsensusSettings().fingerprint(),
+                        CryptoUtil.array2binaryData(BinaryData.empty), 0x01, null))
+        );
+
+        BlockHeader genesisBlockHeader = BlockHeader.build(0,
+                this.settings.getChainSettings().getChain_genesis_timeStamp(), MerkleTree.root(genesisTxs.stream().map(v -> v.id()).collect(Collectors.toList())),
+                UInt256.Zero(), genesisProducer, genesisProducerPrivKey);
+
+        return Block.build(genesisBlockHeader, genesisTxs);
+    }
+
+    private void populate() {
         if (forkBase.head() == null) {
-            TwoTuple<List<ForkItem>,Boolean> twoTuple = forkBase.add(genesisBlock);
-            if(twoTuple != null) {
-                List<ForkItem> saveBlocks = twoTuple.first;
-                WriteBatch batch = db.getBatchWrite();
-                saveBlocks.forEach(item -> {
-                    onConfirmed(item.getBlock());
-                    batch.delete(Serializabler.toBytes(item.getBlock().id()));
-                });
-                db.BatchWrite(batch);
-            }
+            applyBlock(genesisBlock, false, false);
+            blockBase.add(genesisBlock);
+            forkBase.add(genesisBlock);
+            nodeActor.blockAddedToHead(genesisBlock);
+        }
+
+        assert (forkBase.head() != null);
+
+        resolveSwitchFailure(forkBase.switchState());
+        resolveDbUnConsistent(forkBase.head());
+
+        assert (forkBase.head().getBlock().height() >= blockBase.head().getIndex());
+
+        latestHeader = forkBase.head().getBlock().getHeader();
+        log.info("populate() latest block " + latestHeader.getIndex() + " " + latestHeader.id());
+    }
+
+    @Override
+    public String Id() {
+        return genesisBlock.id().toString();
+    }
+
+    @Override
+    public BlockChainIterator iterator() {
+        return new BlockChainIterator(this);
+    }
+
+    @Override
+    public void close() {
+        log.info("blockchain closing");
+        blockBase.close();
+        dataBase.close();
+        forkBase.close();
+        log.info("blockchain closed");
+    }
+
+    @Override
+    public ChainInfo getChainInfo() {
+        return new ChainInfo(genesisBlock.id().toString());
+    }
+
+    @Override
+    public int getHeight() {
+        if (forkBase.head() != null) {
+            return forkBase.head().getBlock().height();
+        } else {
+            return genesisBlock.height();
         }
     }
 
-    
-
     @Override
-    public String getGenesisBlockChainId(){
-        return genesisBlock.id() + "";
-    }
-
-    @Override
-    public BlockChainIterator iterator () {
-        return new BlockChainIterator();
-    } 
-    
-    @Override
-    public int getHeight(){
-        return latestHeader.getIndex();
-    }
-
-    @Override
-    public long getHeadTime(){
-    	return forkBase.head().getBlock().timeStamp();
-    }
-        
-    @Override
-    public BlockHeader getLatestHeader(){
-    	ForkItem forkHead = forkBase.head();
-    	if(forkHead != null) {
-    		return forkHead.getBlock().getHeader();
-    	}else {
-    		return latestHeader;
-    	}
-    }
-    
-    @Override
-    public long headTimeSinceGenesis(){
-        return latestHeader.getTimeStamp() - genesisBlockHeader.getTimeStamp();
-    }
-
-    @Override
-    public long getDistance(){
-        val state = prodStateStore.get();
-        assert (state != null);
-        return state.getDistance();
-    }
-    
-    @Override
-    public BlockHeader getHeader(UInt256 id){
-        return headerStore.get(id);
-    }
-
-    @Override
-    public BlockHeader getHeader(int index){
-        val id = heightStore.get(index);
-        if(id != null){
-            return getHeader(id);
+    public long getHeadTime() {
+        if (forkBase.head() != null) {
+            return forkBase.head().getBlock().timeStamp();
+        } else {
+            return 0;
         }
-        return null;
     }
-    
+
+    @Override
+    public BlockHeader getLatestHeader() {
+        ForkItem forkHead = forkBase.head();
+        if (forkHead != null) {
+            return forkHead.getBlock().getHeader();
+        } else {
+            return genesisBlock.getHeader();
+        }
+    }
+
+    @Override
+    public long headTimeSinceGenesis() {
+        return getLatestHeader().getTimeStamp() - genesisBlock.getHeader().getTimeStamp();
+    }
+
+    @Override
+    public BlockHeader getHeader(UInt256 id) {
+        if (forkBase.get(id) != null) {
+            return forkBase.get(id).getBlock().getHeader();
+        } else {
+            return blockBase.getBlock(id).getHeader();
+        }
+    }
+
+    @Override
+    public BlockHeader getHeader(int height) {
+        if (forkBase.get(height) != null) {
+            return forkBase.get(height).getBlock().getHeader();
+        } else {
+            return blockBase.getBlock(height).getHeader();
+        }
+    }
+
     @Override
     public UInt256 getNextBlockId(UInt256 id) {
-    	UInt256 target = null;
-    	Block block = getBlock(id);
-    	if(block != null) {
-    		Block nextBlock = getBlock(block.height() + 1);
-    		if(nextBlock != null) {
-    			target = nextBlock.id();
-    		}
-    	}
-    	if(target == null) {
-    		target = forkBase.getNext(id);
-    	}
-    	return target;
-    }
-    
-    
-    @Override
-    public Block getBlock(UInt256 id){
-        val headerBlock = headerStore.get(id);
-        if(headerBlock != null){
-            val blkTxMapping = blkTxMappingStore.get(headerBlock.id());
-            val transactions = new ArrayList<Transaction>(blkTxMapping.getTxIds().size());
-            if(blkTxMapping != null){
-                blkTxMapping.getTxIds().forEach(key -> {
-                    Transaction transaction = txStore.get(key);
-                    if(transaction !=  null) transactions.add(transaction);
-                });
+        UInt256 target = null;
+        Block block = getBlock(id);
+        if (block != null) {
+            Block nextBlock = getBlock(block.height() + 1);
+            if (nextBlock != null) {
+                target = nextBlock.id();
             }
-            return new Block(headerBlock, transactions);
         }
-        return null;
+        if (target == null) {
+            target = forkBase.getNext(id);
+        }
+        return target;
     }
-    
+
+
     @Override
-    public Block getBlock(int index){
-        val id = heightStore.get(index);
-        if(id != null){
-            return getBlock(id);
+    public Block getBlock(UInt256 id) {
+        if (UInt256.Zero() == id) {
+            return genesisBlock;
         }
-        return null;
+        if (forkBase.get(id) != null) {
+            return forkBase.get(id).getBlock();
+        } else {
+            return blockBase.getBlock(id);
+        }
     }
 
     @Override
-    public Block getBlockInForkBase(UInt256 id) {
-    	ForkItem forkItem = forkBase.get(id);
-    	if(forkItem == null) {
-    		return null;
-    	}else {
-    		return forkItem.getBlock();
-    	}
+    public Block getBlock(int height) {
+        if (height == 0) {
+            return genesisBlock;
+        }
+        if (forkBase.get(height) != null) {
+            return forkBase.get(height).getBlock();
+        } else {
+            return blockBase.getBlock(height);
+        }
     }
-    
+
     @Override
-    public boolean containsBlock(UInt256 id){
-        return headerStore.contains(id);
+    public Boolean containsBlock(UInt256 id) {
+        return forkBase.contains(id) || blockBase.containBlock(id);
     }
-    
-    /**
-     * 产生区块
-     */
+
     @Override
-    public Block produceBlock(PublicKey producer, PrivateKey privateKey, long timeStamp,
-                              List<Transaction> transactions){
-        UInt160 to = UInt160.fromBytes(Crypto.hash160(CryptoUtil.listTobyte(new BinaryData("0345ffbf8dc9d8ff15785e2c228ac48d98d29b834c2e98fb8cfe6e71474d7f6322").getData())));
-        val minerTx = new Transaction(TransactionType.Miner, minerCoinFrom,
-                to, "", minerAward, UInt256.Zero(), new Long((latestHeader.getIndex() + 1)),
-                new BinaryData(new ArrayList<>()), new BinaryData(new ArrayList<>()),0x01,null);
-        val txs = getUpdateTransaction(minerTx, transactions);
-        val merkleRoot = MerkleTree.root(txs.stream().map(v -> v.id()).collect(Collectors.toList()));
+    public Transaction getPendingTransaction(UInt256 txid) {
+        Optional<Transaction> result = pendingState.getTxs().stream().filter(tx -> tx.getId().equals(txid)).findFirst();
+        if (result.isPresent()) {
+            return result.get();
+        } else {
+            return unapplyTxs.get(txid);
+        }
+    }
+
+    @Override
+    public void startProduceBlock(Witness producer, long blockTime) {
+        assert (pendingState.getTxs().isEmpty());
+        pendingState.set(producer, blockTime);
+        long stopProcessTxTime = blockTime - settings.getRuntimeParasStopProcessTxTimeSlot();
+        log.info("start block at: " + pendingState.getStartTime());
+
         ForkItem forkHead = forkBase.head();
-        System.out.println("forkHeadforkHeadforkHead="+forkHead.getBlock().height());
-        val header = BlockHeader.build(forkHead.getBlock().height() + 1, timeStamp, merkleRoot,
-                forkHead.getBlock().id(), producer, privateKey);
-        val block = new Block(header, txs);
-        TwoTuple<List<ForkItem>,Boolean> twoTuple = forkBase.add(block);
-		if (twoTuple.second) {
-			return block;
-		} else {
-			return null;
-		}
+        PublicKey publicKey = PublicKey.apply(new BinaryData(producer.getPubkey()));
+        Transaction minerTx = new Transaction(TransactionType.Miner, minerCoinFrom.pubKeyHash(),
+                publicKey.pubKeyHash(), "", minerFee, UInt256.Zero(), forkHead.getBlock().height() + 1L,
+                new BinaryData(CryptoUtil.byteToList(Crypto.randomBytes(8))), // add random bytes to distinct different blocks with same block index during debug in some cases
+                new BinaryData(new ArrayList<>()), 0x01, null);
+        dataBase.startSession();
+        Boolean applied = executeTransaction(minerTx, stopProcessTxTime).isSuccessful();
+        assert (applied);
+        pendingState.getTxs().add(minerTx);
+        addAllPendingTransactions(stopProcessTxTime);
     }
-    
+
+    @Override
+    public Boolean addTransaction(Transaction tx) {
+        boolean added = false;
+        if (toBI(tx.getGasLimit()).compareTo(settings.getRuntimeParasTxAcceptGasLimit()) == 1) {
+            added = false;
+        } else if (tx.verifySignature()) {
+            if (!unapplyTxs.containsKey(tx.id())) {
+                unapplyTxs.put(tx.id(), tx);
+            }
+            added = true;
+        }
+
+        if (added) {
+            this.nodeActor.addTransaction(tx);
+        }
+        return added;
+    }
+
+    public void addAllPendingTransactions(long stopProcessTxTime) {
+        TransactionSortedSet ret = new TransactionSortedSet();
+        ret.addAll(unapplyTxs.values());
+        Iterator<Transaction> it = ret.iterator();
+        while (it.hasNext()) {
+            Transaction tx = it.next();
+            if (isAcceptableTx(tx)) {
+                if (Instant.now().toEpochMilli() > stopProcessTxTime) { //当前已经超过可执行时间了，退出
+                    break;
+                }
+                TransactionReceipt receipt = executeTransaction(tx, stopProcessTxTime);
+                pendingState.getTxs().add(tx);
+                addTransactionReceipt(receipt);
+            }
+        }
+    }
+
     /**
-     * 校验交易，并把矿工交易置为第一条记录
-     * @param minerTx
-     * @param transactions
+     *  Gas Price不能低于系统设置的最小值，也不能为负数
+     * @param tx
      * @return
      */
-    private List<Transaction> getUpdateTransaction(Transaction minerTx, List<Transaction> transactions){
-        List<Transaction> txs = new ArrayList<Transaction>(transactions.size() + 1);
-        transactions.forEach(transaction -> {
-            if(verifyTransaction(transaction)) txs.add(transaction);
-        });
-        txs.add(0,minerTx);
-        return txs;
+    protected boolean isAcceptableTx(Transaction tx) {
+        return toBI(tx.getGasPrice()).compareTo(toBI(ByteUtil.hexStringToBytes(GasCost.getInstance().getGasPrice()))) > 0;
     }
-    
+
     @Override
-    public boolean tryInsertBlock(Block block) {
-//        if (verifyBlock(block))
-//            if (saveBlockToStores(block))
-//                return true;
-//        return false;
-        TwoTuple<List<ForkItem>,Boolean> twoTuple = forkBase.add(block);
-        if(twoTuple != null) {
-            List<ForkItem> forkItem = twoTuple.first;
-            for (int i = 0; i < forkItem.size(); i++) {
-                onConfirmed(forkItem.get(i).getBlock());
-            }
+    public Boolean addTransactionReceipt(TransactionReceipt transactionReceipt) {
+        txReceipts.put(transactionReceipt.getTransaction().id(), transactionReceipt);
+        return true;
+    }
+
+    @Override
+    public Boolean isProducingBlock() {
+        return !pendingState.getTxs().isEmpty();
+    }
+
+
+    @Override
+    public boolean produceBlockAddTransaction(Transaction tx) {
+        assert (!pendingTxs.isEmpty());
+        TransactionReceipt receipt = executeTransaction(tx, Long.MAX_VALUE);
+        if (receipt.isSuccessful()) {
+            pendingTxs.add(tx);
             return true;
-        }else
+        } else
             return false;
     }
 
     @Override
-    public Transaction getTransaction(UInt256 id){
-        return  txStore.get(id);
+    public Block produceBlockFinalize(long endTime) {
+        if (pendingState.getTxs().isEmpty()) {
+            log.info("block canceled");
+            return null;
+        } else {
+            log.info("block time: " + pendingState.getBlockTime() + ", end time: " + endTime + ", produce time: " + (endTime - pendingState.getStartTime()));
+            ForkItem forkHead = forkBase.head();
+            if (!pendingState.getTxs().isEmpty() && pendingState.getTxs().get(0).getTxType() == TransactionType.Miner) {
+                pendingState.getTxs().remove(0);
+            }
+            UInt256 merkleRoot = MerkleTree.nullRoot();
+            if (!pendingState.getTxs().isEmpty())
+                merkleRoot = MerkleTree.root(pendingState.getTxs().stream().map(v -> v.id()).collect(Collectors.toList()));
+            PrivateKey privateKey = new PrivateKey(Scalar.apply(new BinaryData(pendingState.getProducer().getPrivkey())));
+            PublicKey publicKey = PublicKey.apply(new BinaryData(pendingState.getProducer().getPubkey()));
+            long timeStamp = pendingState.getBlockTime();
+            BlockHeader header = BlockHeader.build(
+                    forkHead.getBlock().height() + 1, timeStamp, merkleRoot,
+                    forkHead.getBlock().id(), publicKey, privateKey);
+            Block block = Block.build(header, pendingState.getTxs());
+            pendingState.getTxs().clear();
+            if (tryInsertBlock(block, false)) {
+                notificationOnBlock.onBlock(block);
+                nodeActor.newBlockProduce(block);
+                return block;
+            } else {
+                return null;
+            }
+        }
+    }
+
+    public TransactionReceipt executeTransaction(Transaction tx, long stopProcessTxTime) {
+        if (tx.getTxType() == TransactionType.Genesis || tx.getTxType() == TransactionType.Miner) {
+            applyTransaction(tx);
+            return new TransactionReceipt(tx);
+        }
+        TransactionExecutor executor = new TransactionExecutor(tx, this, repository, stopProcessTxTime);
+        executor.init();
+        executor.execute();
+        executor.go();
+        TransactionReceipt receipt = executor.getReceipt();
+        return receipt;
+    }
+
+    @Override
+    public Boolean tryInsertBlock(Block block, Boolean doApply) {
+        boolean inserted = false;
+        if (!pendingState.getTxs().isEmpty()) {
+            pendingState.getTxs().forEach(tx -> {
+                if (tx.getTxType() != TransactionType.Miner)
+                    unapplyTxs.put(tx.id(), tx);
+
+            });
+            pendingState.getTxs().clear();
+            dataBase.rollBack();
+        }
+
+        if (forkBase.head().getBlock().id().equals(block.prev())) {
+            if (doApply == false) { // 本节点出块，直接add 到forkBase
+                if (forkBase.add(block)) {
+                    inserted = true;
+                    latestHeader = block.getHeader();
+                } else
+                    log.error("Error during forkBase add block " + block.height() + " " + block.id());
+            } else if (applyBlock(block, true, true)) { // 来自其它节点传入的Block，apply 所有交易
+                if (forkBase.add(block)) {
+                    inserted = true;
+                    latestHeader = block.getHeader();
+                } else
+                    log.error("Error during forkBase add block " + block.height() + " " + block.id());
+            } else {
+                log.info("block ${block.height} ${block.id} apply error");
+                //forkBase.removeFork(block.id)
+            }
+
+            if (inserted) {
+                this.nodeActor.blockAddedToHead(block);
+            }
+        } else {
+            log.info("received block try add to minor fork chain. block " + block.height() + " " + block.id());
+            if (forkBase.add(block))
+                inserted = true;
+            else
+                log.info("add fail");
+        }
+        if (inserted) {
+            block.getTransactions().forEach(tx -> {
+                unapplyTxs.remove(tx.id());
+            });
+        }
+        return inserted;
+    }
+
+    @Override
+    public Transaction getTransaction(UInt256 id) {
+        TransactionReceipt transactionReceipt = null;
+        if (id != null)
+            transactionReceipt = transactionReceiptBase.getTransactionReceipt(id);
+        if (transactionReceipt != null) {
+            Block block = getBlock(transactionReceipt.getBlockHeight());
+            Transaction tx = block.getTransaction(transactionReceipt.getTxIndex());
+            return tx;
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public TransactionReceipt getTransactionReceipt(UInt256 id) {
+        TransactionReceipt transactionReceipt = null;
+        if (id != null)
+            transactionReceipt = transactionReceiptBase.getTransactionReceipt(id);
+        return transactionReceipt;
     }
 
     @Override
     public boolean containsTransaction(UInt256 id) {
-        return txStore.contains(id);
+        return getTransaction(id) != null;
     }
-    
-    /**
-	 * 已确认的Block存入数据库
-	 * @param block
-	 */
-	private void onConfirmed(Block block) {
-		log.info("confirm block height:"+ block.height()+" block id:"+block.id());
-		if(block.height() != 0) {
-			saveBlockToStores(block);
-		}
-	}
-	
-    private boolean saveBlockToStores(Block block){
-        try {
-        	WriteBatch batch = db.getBatchWrite();
-            headerStore.set(block.getHeader().id(), block.getHeader(), batch);
-            heightStore.set(block.getHeader().getIndex(), block.getHeader().id(), batch);
-            headBlkStore.set(new HeadBlock(block.getHeader().getIndex(), block.getHeader().id()), batch);
-            val transations = new ArrayList<UInt256>(block.getTransactions().size());
-            block.getTransactions().forEach(transaction -> {transations.add(transaction.id());});
-            val blkTxMapping = new BlkTxMapping(block.id(), transations);
-            blkTxMappingStore.set(block.id(), blkTxMapping, batch);
-            Map<UInt160, Account> accounts = new HashMap<UInt160, Account>();
-            Map<UInt160, Map<UInt256, Fixed8>> balances = new HashMap<>();
-            block.getTransactions().forEach(tx -> {
-                txStore.set(tx.id(), tx, batch);
-                calcBalancesInBlock(balances, true, tx.fromPubKeyHash(), tx.getAmount(), tx.getAssetId());
-                calcBalancesInBlock(balances, false, tx.getToPubKeyHash(), tx.getAmount(), tx.getAssetId());
-                updateAccout(accounts, tx);
-            });
-            balances.forEach((accountAddress, balancesInLocalBlk) -> {
-                if(accountStore.contains(accountAddress)){
-                    val account = accountStore.get(accountAddress);
-                    val updateBalances = updateBalancesInAccount(account.getBalances(), balancesInLocalBlk);
-                    val updateAccount = new Account(account.isActive(), account.getName(),updateBalances,
-                            account.getNextNonce(), account.getVersion(), account.get_id());
-                    accountStore.set(accountAddress, updateAccount, batch);
-                }
-                else{
-                    val newAccount = new Account(true, "", getBalancesWithOutAccount(balancesInLocalBlk), 0L);
-                    accountStore.set(accountAddress, newAccount, batch);
-                }
-            });
-            latestHeader = block.getHeader();
-            db.BatchWrite(batch);
-            return true;
-        } catch (Throwable throwable) {
-            throwable.printStackTrace();
-            return false;
-        }
-    }
-    
-	private Map<UInt160, Map<UInt256, Fixed8>> calcBalancesInBlock(
-			Map<UInt160, Map<UInt256, Fixed8>> balances, Boolean spent, UInt160 address, Fixed8 amounts,
-			UInt256 assetId) {
-		Fixed8 amount = amounts;
-		if (spent)
-			amount = new Fixed8(0L - amounts.getValue());
-		if (balances.containsKey(address)) {
-			Map<UInt256, Fixed8> balance = balances.get(address);
-			Fixed8 amountBeforeTrans = balance.get(assetId);
-			Fixed8 amountAfterTrans = new Fixed8(amountBeforeTrans.getValue() + amount.getValue());
-			if (balance.containsKey(assetId))
-				balance.replace(assetId, amountAfterTrans);
-			else
-				balance.put(assetId, amountAfterTrans);
-		} else {
-			Map<UInt256, Fixed8> transRecord = new HashMap<UInt256, Fixed8>();
-			transRecord.put(assetId, amount);
-			balances.put(address, transRecord);
-		}
-		return balances;
-	}
-	
-	private Map<UInt256, Fixed8> updateBalancesInAccount(Map<UInt256, Fixed8> balancesInAccount,
-			Map<UInt256, Fixed8> balancesInLocalBlk) {
-		Map<UInt256, Fixed8> updateBalances = new HashMap<>();
-		balancesInAccount.forEach((assetId, balance) -> {
-			if (balancesInLocalBlk.containsKey(assetId)) {
-				updateBalances.put(assetId, balance.add(balancesInLocalBlk.get(assetId)));
-			} else
-				updateBalances.put(assetId, balance);
-		});
-		balancesInLocalBlk.forEach((localAssetId, localBalance) -> {
-			if (!balancesInAccount.containsKey(localAssetId)) {
-				updateBalances.put(localAssetId, localBalance);
-			}
-		});
-		return updateBalances;
-	}
 
-	private Map<UInt256, Fixed8> getBalancesWithOutAccount(Map<UInt256, Fixed8> balancesInLocalBlk){
-        HashMap<UInt256, Fixed8> balancesWithOutAccount = new HashMap<>();
-        balancesInLocalBlk.forEach((assetId, balance) -> {
-            if(balance.greater(Fixed8.Zero)) balancesWithOutAccount.put(assetId, balance);
-        });
-        return balancesWithOutAccount;
+    private Boolean applyBlock(Block block, boolean verify, boolean enableSession) {
+        boolean applied = true;
+        if (!verify || verifyBlock(block)) {
+            if (enableSession) {
+                dataBase.startSession();
+            }
+            for (Transaction tx : block.getTransactions()) {
+                TransactionReceipt receipt = executeTransaction(tx, Long.MAX_VALUE);
+                addTransactionReceipt(receipt);
+            }
+        } else
+            applied = false;
+        if (!applied) {
+            log.info("Block apply fail " + block.height() + " " + block.id());
+        }
+        return applied;
     }
-    
-	private void updateAccout(Map<UInt160, Account> accounts, Transaction tx){
-        // TODO
-        return;
+
+
+    private Boolean applyTransaction(Transaction tx) {
+        boolean txValid = true;
+
+        Account fromAccount = dataBase.getAccount(tx.fromPubKeyHash());
+
+        Map<UInt256, Fixed8> frombalances = Maps.newHashMap();
+        if (fromAccount == null) {
+            fromAccount = new Account(true, "", frombalances, 0L, 0x01, null);
+        }
+        Account toAccount = dataBase.getAccount(tx.getToPubKeyHash());
+        Map<UInt256, Fixed8> tobalances = Maps.newHashMap();
+        if (toAccount == null) {
+            toAccount = new Account(true, "", tobalances, 0L, 0x01, null);
+        }
+
+//        if (tx.getTxType() == TransactionType.Miner || tx.getTxType() == TransactionType.Genesis) {
+//        } else {
+//            if (!fromAccount.getBalances().containsKey(tx.getAssetId())) txValid = false;
+//            val txAmount = tx.getAmount();
+//            val fromBalances = fromAccount.getBalances();
+//            val fromAmount = fromBalances.get(tx.getAssetId()) == null ? new Fixed8(0) : fromBalances.get(tx.getAssetId());
+//            if (txAmount.greater(fromAmount)) txValid = false;
+//            if (!tx.getNonce().equals(fromAccount.getNextNonce())) txValid = false;
+//        }
+        try {
+            if (tx.getTxType() != TransactionType.Miner) {   //only genesis ?
+                Map<UInt256, Fixed8> fromBalance = updateBalancesAccount(fromAccount.getBalances(), tx, "mus");
+                Map<UInt256, Fixed8> toBalance = updateBalancesAccount(toAccount.getBalances(), tx, "add");
+                fromAccount.setBalances(fromBalance);
+                fromAccount.IncNonce();
+                toAccount.setBalances(toBalance);
+                dataBase.setAccount(tx.fromPubKeyHash(), fromAccount, tx.getToPubKeyHash(), toAccount);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            txValid = false;
+        }
+
+        return txValid;
     }
-	
-    @Override
-    public boolean verifyBlock(Block block) {
+
+
+    private Map<UInt256, Fixed8> updateBalancesAccount(Map<UInt256, Fixed8> balancesInAccount,
+                                                       Transaction tx, String flag) {
+        Fixed8 amount = tx.getAmount();
+        if (flag.equals("mus")) {
+            amount = Fixed8.Zero.mus(tx.getAmount());
+        }
+        val balance = balancesInAccount.containsKey(tx.getAssetId()) ? balancesInAccount.get(tx.getAssetId()).add(amount) : amount;
+        balancesInAccount.put(tx.getAssetId(), balance);
+
+        return balancesInAccount;
+    }
+
+    private Map<UInt256, Fixed8> updateBalancesContractAccount(Map<UInt256, Fixed8> balancesInAccount,
+                                                               Transaction tx, Fixed8 gasTotal, String flag) throws IOException {
+        Fixed8 amount = tx.getAmount();
+
+        if (flag.equals("mus")) {
+            amount = Fixed8.Zero.mus(tx.getAmount().add(gasTotal));
+        }
+        val balance = balancesInAccount.containsKey(tx.getAssetId()) ? balancesInAccount.get(tx.getAssetId()).add(amount) : amount;
+        balancesInAccount.put(tx.getAssetId(), balance);
+
+        return balancesInAccount;
+    }
+
+
+    private Boolean verifyBlock(Block block) {
         if (!verifyHeader(block.getHeader()))
             return false;
-        if (!forAllTransactionsVerify(block.getTransactions()))
+        else if (block.getTransactions().size() == 0) {
+            if (block.getHeader().getMerkleRoot().equals(UInt256.Zero())) {
+                return true;
+            } else {
+                log.info("verifyBlock error: block.transactions.size == 0");
+                return false;
+            }
+        } else if (!block.merkleRoot().equals(block.getHeader().getMerkleRoot()))
             return false;
-        if (!verifyRegisterNames(block.getTransactions()))
+        else if (!verifyTxs(block.getTransactions()))
             return false;
-        return true;
+        else if (!verifyRegisterNames(block.getTransactions()))
+            return false;
+        else
+            return true;
     }
 
-    private boolean verifyHeader(BlockHeader header){
-        if (header.getIndex() != latestHeader.getIndex() + 1)
-            return false;
-        if (header.getTimeStamp() < latestHeader.getTimeStamp())
-            return false;
-        // TODO: verify rule of timeStamp and producer
-        if (header.id().equals(latestHeader.id()))
-            return false;
-        if (!header.getPrevBlock().equals(latestHeader.id()))
-            return false;
-        if (header.getProducer().toBin().getLength() != 33)
-            return false;
-        if (!header.verifySig())
-            return false;
-        return true;
-    }
-    
-    
-    private boolean forAllTransactionsVerify(List<Transaction> transactions) {
-        boolean flag = true;
-        for(Transaction transaction : transactions){
-            if(! verifyTransaction(transaction)) {
-                flag = false;
-                return flag;
+    private Boolean verifyTxs(List<Transaction> txs) {
+        boolean isValid = true;
+        int txsNum = txs.size();
+        for (int i = 0; i < txsNum; i++) {
+            if (!verifyTransaction(txs.get(i))) {
+                isValid = false;
+                break;
             }
         }
-        return flag;
+        return isValid;
     }
-	
-    private boolean verifyRegisterNames(List<Transaction> transactions){
-        val newNames = new ArrayList<String>();
-        val registers = new ArrayList<UInt160>();
-        for(Transaction tx: transactions){
+
+    private Boolean verifyTransaction(Transaction tx) {
+        if (tx.getTxType() == TransactionType.Miner || tx.getTxType() == TransactionType.Genesis) {
+            return true;
+        } else {
+            boolean isValid = tx.verifySignature();
+            return isValid && checkAmount();
+        }
+    }
+
+
+    private Boolean verifyHeader(BlockHeader header) {
+        val prevBlock = forkBase.get(header.getPrevBlock());
+        if (prevBlock == null) {
+            log.info("verifyHeader error: prevBlock not found");
+            return false;
+        } else if (header.getIndex() != prevBlock.getBlock().height() + 1) {
+            log.info("verifyHeader error: index error " + header.getIndex() + " " + prevBlock.getBlock().height());
+            return false;
+        } else if (!ProducerUtil.isProducerValid(header.getTimeStamp(), header.getProducer(), settings.getConsensusSettings())) {
+            log.info("verifyHeader error: producer not valid");
+            return false;
+        } else if (!header.verifySig()) {
+            log.info("verifyHeader error: verifySig fail");
+            return false;
+        } else {
+            // verify merkleRoot in verifyBlock()
+            return true;
+        }
+    }
+
+
+    private boolean verifyRegisterNames(List<Transaction> transactions) {
+        boolean isValid = true;
+        Set<String> newNames = new HashSet();
+        Set<UInt160> registers = new HashSet();
+        int txNum = transactions.size();
+        for (int i = 0; i < txNum; i++) {
+            Transaction tx = transactions.get(i);
             if (tx.getTxType() == TransactionType.RegisterName) {
                 String name = "";
                 try {
@@ -449,108 +651,133 @@ public class LevelDBBlockChain implements BlockChain{
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
-                if (newNames.contains(name)) return false;
-                if (registers.contains(tx.fromPubKeyHash())) return false;
+                if (name.length() != 10) {// TODO: read "10" from config file
+                    isValid = false;
+                }
+                if (newNames.contains(name)) {
+                    isValid = false;
+                }
+                if (registers.contains(tx.fromPubKeyHash())) {
+                    isValid = false;
+                }
                 newNames.add(name);
                 registers.add(tx.fromPubKeyHash());
-            }}
-        // make sure name is not used
-        return forAllNewNamesVerify(newNames) && !forAllRegistersVerify(registers);
-        // make sure register never registed before
-    }
-    
-    private boolean forAllNewNamesVerify(ArrayList<String> names) {
-        boolean flag = true;
-        for(String name : names){
-            if(nameToAccountStore.get(name) == null) {
-                flag = false;
-                return flag;
             }
         }
-        return flag;
-    }
-    
-    private boolean forAllRegistersVerify(ArrayList<UInt160> registers) {
-        boolean flag = true;
-        for(UInt160 register : registers){
-            val account = accountStore.get(register);
-            if (account != null && account.getName() != "") {
-                flag = false;
-                return flag;
+        Iterator newNamesIt = newNames.iterator();
+        while (newNamesIt.hasNext()) {
+            if (dataBase.nameExists((String) newNamesIt.next())) {
+                isValid = false;
+                break;
             }
         }
-        return flag;
-    }
 
-    
-    @Override
-    public boolean verifyTransaction(Transaction tx) {
-        if (tx.getTxType() == TransactionType.Miner) {
-            // TODO check miner and only one miner tx
-            return true;
+        Iterator registersIt = registers.iterator();
+        while (newNamesIt.hasNext()) {
+            if (dataBase.registerExists((UInt160) registersIt.next())) {
+                isValid = false;
+                break;
+            }
         }
-        val isInvalid = tx.verifySignature();
-        return isInvalid && checkAmount();
+        return isValid;
     }
 
-    boolean checkAmount(){
+    boolean checkAmount() {
         return true;
     }
-    
+
     @Override
-    public Map<UInt256, Long> getBalance(UInt160 address){
-        val account = accountStore.get(address);
-        if(account == null) return null;
-        else{
-            if(account.isActive()){
-                Map<UInt256, Long> map = new HashMap<UInt256, Long>();
-                val balanceKeys = account.getBalances().keySet();
-                val balances = account.getBalances();
-                balanceKeys.forEach(key -> {
-                    map.put(key, balances.get(key).getValue());
-                });
-            }
-            return null;
-        }
+    public Map<UInt256, BigInteger> getBalance(UInt160 address) {
+        Map<UInt256, BigInteger> resultMap = Maps.newHashMap();
+        Map<UInt256, Fixed8> map = dataBase.getBalance(address);
+        map.forEach((k, v) -> resultMap.put(k, v.getValue()));
+        return resultMap;
     }
 
     @Override
     public Account getAccount(UInt160 address) {
-    	return accountStore.get(address);
-    }
-    
-    private BlockHeader initDB(WriteBatch batch){
-        BlkTxMapping blkTxMapping = new BlkTxMapping(genesisBlock.id(), genesisBlock.getTransactionIds());
-        blkTxMappingStore.set(genesisBlock.id(), blkTxMapping, batch);
-        headerStore.set(genesisBlock.id(), genesisBlockHeader, batch);
-        heightStore.set(genesisBlock.height(), genesisBlock.id(), batch);
-        headBlkStore.set(new HeadBlock(genesisBlockHeader.getIndex(), genesisBlockHeader.id()), batch);
-        prodStateStore.set(new ProducerStatus(1L), batch);
-        return genesisBlockHeader;
+        return dataBase.getAccount(address);
     }
 
-    public BlockHeader reInitDB(WriteBatch batch){
-        headerStore.foreachForDelete(batch);
-        heightStore.foreachForDelete(batch);
-        blkTxMappingStore.foreachForDelete(batch);
-        accountStore.foreachForDelete(batch);
-        nameToAccountStore.foreachForDelete(batch);
-        prodStateStore.delete(batch);
-        headBlkStore.delete(batch);
-        return initDB(batch);
+
+    private void onConfirmed(Block block) {
+        if (block.height() > 0) {
+            log.info("confirm block " + block.height() + " (" + block.id() + ")");
+            dataBase.commit(block.height());
+            blockBase.add(block);
+
+            int len = block.getTransactions().size();
+            List<TransactionReceipt> transactionReceipts = new ArrayList<>();
+            for (int i = 0; i < len; i++) {
+                Transaction tx = block.getTransaction(i);
+                TransactionReceipt transactionReceipt = txReceipts.get(tx.id());
+                try {
+                    transactionReceipt.setBlockHeight(block.height());
+                    transactionReceipt.setBlockHash(block.id().getData());
+                    transactionReceipt.setTxIndex(i);
+                    transactionReceipts.add(transactionReceipt);
+                    txReceipts.remove(tx.id());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    log.error("receipt exception.");
+                }
+            }
+            if (!transactionReceipts.isEmpty()) {
+                transactionReceiptBase.add(transactionReceipts);
+            }
+            transactionReceiptBase.commit();
+        }
+        nodeActor.confirmedBlock(block);
     }
 
-    public BlockHeader reInit(){
-        val batch = db.getBatchWrite();
-        val ret = reInitDB(batch);
-        db.BatchWrite(batch);
-        return ret;
+    private void printChain(String title, List<ForkItem> fork) {
+        String str = fork.stream().map(item -> item.getBlock().id().toString().substring(0, 6)).collect(Collectors.joining("->"));
+        log.info(title + ": " + str);
     }
 
-    public BlockHeader init(HeadBlock headBlock){
-        val blockHeader = headerStore.get(headBlock.getId());
-        if(blockHeader == null) return reInit();
-        else return blockHeader;
+    private void resolveSwitchFailure(SwitchState state) {
+        if (state == null) return;
+        val oldBranch = forkBase.getBranch(state.getOldHead(), state.getForkPoint());
+        val newBranch = forkBase.getBranch(state.getNewHead(), state.getForkPoint());
+        val result = onSwitch(oldBranch, newBranch, state);
+        forkBase.endSwitch(oldBranch, newBranch, result);
+    }
+
+    private void resolveDbUnConsistent(ForkItem head) {
+        while (dataBase.revision() > head.height() + 1) {
+            dataBase.rollBack();
+        }
+    }
+
+    private SwitchResult onSwitch(List<ForkItem> from, List<ForkItem> to, SwitchState switchState) {
+        printChain("old chain", from);
+        printChain("new chain", to);
+//        from.forEach(forkItem -> dataBase.rollBack());
+//        to.forEach(forkItem -> applyBlock(forkItem.getBlock()));
+
+        assert (dataBase.revision() == from.get(from.size() - 1).height() + 1);
+        while (dataBase.revision() > switchState.getHeight() + 1) {
+            dataBase.rollBack();
+        }
+
+        int appliedCount = 0;
+        for (ForkItem forkItem : to) {
+            if (applyBlock(forkItem.getBlock(), true, true)) {
+                appliedCount += 1;
+            }
+        }
+        SwitchResult switchResult;
+        if (appliedCount < to.size()) {
+            while (dataBase.revision() > switchState.getHeight() + 1) {
+                dataBase.rollBack();
+            }
+            from.forEach(item -> applyBlock(item.getBlock(), true, true));
+            switchResult = new SwitchResult(false, to.get(appliedCount));
+        } else {
+            nodeActor.forkSwitch(from, to);
+            switchResult = new SwitchResult(true, null);
+        }
+        return switchResult;
     }
 
 }

@@ -1,6 +1,7 @@
 package com.uchain.crypto;
 
 
+import com.uchain.util.ByteUtil;
 import org.bouncycastle.asn1.ASN1Integer;
 import org.bouncycastle.asn1.DERSequenceGenerator;
 import org.bouncycastle.asn1.sec.SECNamedCurves;
@@ -12,6 +13,8 @@ import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 import org.bouncycastle.crypto.signers.ECDSASigner;
 import org.bouncycastle.crypto.signers.HMacDSAKCalculator;
+import org.bouncycastle.math.ec.ECFieldElement;
+import org.bouncycastle.math.ec.ECPoint;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -51,7 +54,7 @@ public class Ecdsa {
         if (dt.getLength(dt.getData())== 32){
             return dt;
         } else if (dt.getLength(dt.getData()) < 32){
-            byte []out = new byte[dt.getLength(dt.getData())];
+            byte []out = new byte[32-dt.getLength(dt.getData())];
             Arrays.fill(out, (byte)0);
             ArrayList<Byte> array = CryptoUtil.byteToList(out);
             array.addAll(dt.getData());
@@ -242,7 +245,45 @@ public class Ecdsa {
         return list;
     }
 
+    public List<PublicKey> recoverPublicKey(BinaryData sig,byte[] message){
+        return recoverPublicKey(decodeSignatureLax(sig), message);
+    }
 
+    public List<PublicKey> recoverPublicKey(List<BigInteger> sig,byte[] message){
+        BigInteger r = sig.get(0);
+        BigInteger s = sig.get(1);
+        BigInteger m = new BigInteger(1, message);
+        List<Point> ps = recoverPoint(r);
+        ECPoint Q1 = (ps.get(0).multiply(s).getValue().
+                subtract(curve.getG().multiply(m))).
+                multiply(r.modInverse(curve.getN()));
+        ECPoint Q2 = (ps.get(1).multiply(s).getValue()
+                .subtract(curve.getG().multiply(m)))
+                .multiply(r.modInverse(curve.getN()));
+        List<PublicKey> ret = new ArrayList<>();
+        ret.add(new PublicKey(new Point(Q1)));
+        ret.add(new PublicKey(new Point(Q2)));
+        return ret;
+    }
 
-
+    private List<Point> recoverPoint(BigInteger x) {
+        ECFieldElement x1 = curve.getCurve().fromBigInteger(x);
+        ECFieldElement square = x1.square().add(curve.getCurve().getA()).multiply(x1)
+                .add(curve.getCurve().getB());
+        ECFieldElement y1 = square.sqrt();
+        ECFieldElement y2 = y1.negate();
+        ECPoint R1 = curve.getCurve()
+                .createPoint(x1.toBigInteger(), y1.toBigInteger()).normalize();
+        ECPoint R2 = curve.getCurve()
+                .createPoint(x1.toBigInteger(), y2.toBigInteger()).normalize();
+        List<Point> ret = new ArrayList<>();
+        if (y1.testBitZero()) {
+            ret.add(new Point(R2));
+            ret.add(new Point(R1));
+        }else{
+            ret.add(new Point(R1));
+            ret.add(new Point(R2));
+        }
+        return ret;
+    }
 }

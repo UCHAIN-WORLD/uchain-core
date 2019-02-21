@@ -1,5 +1,6 @@
 package com.uchain.core.datastore.keyvalue;
 
+import com.uchain.util.Utils;
 import lombok.val;
 
 import java.io.*;
@@ -35,7 +36,8 @@ public class IntKey implements Converter<Integer>{
 	@Override
 	public void serializer(Integer key, DataOutputStream os) {
         try {
-            os.write(key);
+//            os.write(key);
+			Utils.writeVarint(key,os);
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -1,20 +1,12 @@
 package com.uchain.core;
 
 import com.uchain.main.Settings;
+import com.uchain.network.Node;
 
 public class LevelDBBlockChainBuilder {
 
-    static LevelDBBlockChain chain = null;
-
-    public static LevelDBBlockChain populate(Settings settings){
-        LevelDBBlockChain populateChain = new LevelDBBlockChain(settings);
-        chain = populateChain;
+    public static LevelDBBlockChain populate(Settings settings, NotificationOnBlock notificationOnBlock, NotificationOnTransaction notificationOnTransaction, Node nodeActor) {
+        LevelDBBlockChain populateChain = new LevelDBBlockChain(settings, notificationOnBlock, notificationOnTransaction, nodeActor);
         return populateChain;
-    }
-
-
-
-    public static LevelDBBlockChain getLevelDBBlockchain() {
-        return chain;
     }
 }

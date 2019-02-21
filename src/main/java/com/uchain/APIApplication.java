@@ -1,18 +1,17 @@
 package com.uchain;
 
+import akka.actor.ActorRef;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.server.ResourceConfig;
 
-import java.io.IOException;
-
 public class APIApplication extends ResourceConfig{
 
-    public APIApplication(){
+    public APIApplication(ActorRef nodeActor){
         packages("jersey");
 
-        //load resource
-        register(RestfulResource.class);
+        //load resource 所有的cli请求转发到类RestfulResource
+        register(new RestfulResource(nodeActor));
 
         //register data transfer
         register(JacksonJsonProvider.class);
@@ -21,13 +20,4 @@ public class APIApplication extends ResourceConfig{
         register(LoggingFilter.class);
     }
 
-    public static void main(String[] args){
-        try {
-            JerseyServer.runServer();
-            System.out.println("OK");
-        }
-        catch (IOException e){
-            e.printStackTrace();
-        }
-    }
 }

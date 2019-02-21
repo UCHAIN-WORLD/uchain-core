@@ -6,127 +6,180 @@ import java.net.InetSocketAddress;
 import akka.actor.ActorRef;
 import lombok.Getter;
 import lombok.Setter;
+import scala.remote;
 
 public class NetworkUtil {
 
-	@Getter
-	@Setter
-	public static class DoConnecting {
-		private InetSocketAddress direction;
+    public interface ConnectionType {
+    }
 
-		private InetSocketAddress remote;
+    @Getter
+    @Setter
+    public static class Incoming implements ConnectionType {
+    }
 
-	}
+    @Getter
+    @Setter
+    public static class Outgoing implements ConnectionType {
+    }
 
-	public static class CloseConnection {
-	}
+    @Getter
+    @Setter
+    public class DisconnectFrom {
+        ConnectedPeer peer;
 
-	public static class HandshakeTimeout {
-	}
+        public DisconnectFrom(NetworkUtil.ConnectedPeer peer) {
+            this.peer = peer;
+        }
+    }
 
-	public static class StartInteraction {
-	}
+    @Getter
+    @Setter
+    public static class DoConnecting {
+        private ConnectionType direction;
 
-	public static class HandshakeDone {
-	}
+        private InetSocketAddress remote;
 
-	@Getter
-	@Setter
-	public static class ConnectedPeer {
-		private InetSocketAddress socketAddress;
-		private ActorRef handlerRef;
-		private InetSocketAddress direction;
-		private Handshake handshake;
+    }
 
-		public ConnectedPeer(InetSocketAddress socketAddress, ActorRef handlerRef, InetSocketAddress direction,
-				Handshake handshake) {
-			this.socketAddress = socketAddress;
-			this.handlerRef = handlerRef;
-			this.direction = direction;
-			this.handshake = handshake;
-		}
+    public static class CloseConnection {
+    }
 
-		@Override
-		public String toString() {
-			return "ConnectedPeer{" +
-					"socketAddress=" + socketAddress +
-					", handlerRef=" + handlerRef +
-					", direction=" + direction +
-					", handshake=" + handshake +
-					'}';
-		}
-	}
+    public static class HandshakeTimeout {
+    }
 
-	@Getter
-	@Setter
-	public static class Handshaked {
-		private ConnectedPeer connectedPeer;
+    public static class StartInteraction {
+    }
 
-		public Handshaked(ConnectedPeer connectedPeer) {
-			this.connectedPeer = connectedPeer;
-		}
-	}
+    public static class HandshakeDone {
+    }
 
-	@Getter
-	@Setter
-	public static class Handshake implements Serializable {
+    @Getter
+    @Setter
+    public static class StartConnection {
+        ConnectionType direction;
+        InetSocketAddress socketAddress;
+        ActorRef connection;
 
-		private static final long serialVersionUID = 1L;
-		private String agentName;
-		private String appVersion;
-		private String nodeName;
+        public StartConnection(ConnectionType direction, InetSocketAddress socketAddress, ActorRef connection) {
+            this.direction = direction;
+            this.socketAddress = socketAddress;
+            this.connection = connection;
+        }
+    }
 
-		public Handshake(String agentName, String appVersion, String nodeName) {
-			this.agentName = agentName;
-			this.appVersion = appVersion;
-			this.nodeName = nodeName;
-		}
+    @Getter
+    @Setter
+    public static class ConnectedPeer {
+        private InetSocketAddress socketAddress;
+        private ActorRef handlerRef;
+        private ConnectionType direction;
+        private Handshake handshake;
 
-		@Override
-		public String toString() {
-			return "Handshake [agentName=" + agentName + ", appVersion=" + appVersion + ", nodeName=" + nodeName + "]";
-		}
-	}
+        public ConnectedPeer(InetSocketAddress socketAddress, ActorRef handlerRef, ConnectionType direction,
+                             Handshake handshake) {
+            this.socketAddress = socketAddress;
+            this.handlerRef = handlerRef;
+            this.direction = direction;
+            this.handshake = handshake;
+        }
 
-	@Getter
-	@Setter
-	public static class Message implements Serializable {
+        @Override
+        public String toString() {
+            return "ConnectedPeer{" +
+                    "socketAddress=" + socketAddress +
+                    ", handlerRef=" + handlerRef +
+                    ", direction=" + direction +
+                    ", handshake=" + handshake +
+                    '}';
+        }
+    }
 
-		@Override
-		public String toString() {
-			return "Message [type=" + type + ", context=" + context + "]";
-		}
+    @Getter
+    @Setter
+    public static class Handshaked {
+        private ConnectedPeer connectedPeer;
 
-		private static final long serialVersionUID = 2L;
-		private String type;
-		private String context;
+        public Handshaked(ConnectedPeer connectedPeer) {
+            this.connectedPeer = connectedPeer;
+        }
+    }
 
-		public Message(String type, String context) {
-			this.type = type;
-			this.context = context;
-		}
-	}
+    @Getter
+    @Setter
+    public static class Handshake implements Serializable {
 
-	public static class GetHandlerToPeerConnectionManager {
-	}
+        private static final long serialVersionUID = 1L;
+        private String agentName;
+        private String appVersion;
+        private String nodeName;
+        private String chainId;
+        private long time;
 
-	@Getter
-	@Setter
-	public static class PeerHandler {
-		private ActorRef handlerRef;
+        public Handshake(String agentName, String appVersion, String nodeName) {
+            this.agentName = agentName;
+            this.appVersion = appVersion;
+            this.nodeName = nodeName;
+        }
 
-		public PeerHandler(ActorRef handlerRef) {
-			this.handlerRef = handlerRef;
-		}
-	}
+        public Handshake(String agentName, String appVersion, String nodeName, String chainId, long time) {
+            this.agentName = agentName;
+            this.appVersion = appVersion;
+            this.nodeName = nodeName;
+            this.chainId = chainId;
+            this.time = time;
+        }
 
-	@Getter
-	@Setter
-	public static class Disconnected {
-		private InetSocketAddress remoteAddress;
+        @Override
+        public String toString() {
+            return "Handshake [agentName=" + agentName
+                    + ", appVersion=" + appVersion
+                    + ", nodeName=" + nodeName
+                    + ", chainId=" + chainId
+                    + ", time=" + time
+                    + "]";
+        }
+    }
 
-		public Disconnected(InetSocketAddress remoteAddress) {
-			this.remoteAddress = remoteAddress;
-		}
-	}
+    @Getter
+    @Setter
+    public static class Message implements Serializable {
+
+        @Override
+        public String toString() {
+            return "Message [type=" + type + ", context=" + context + "]";
+        }
+
+        private static final long serialVersionUID = 2L;
+        private String type;
+        private String context;
+
+        public Message(String type, String context) {
+            this.type = type;
+            this.context = context;
+        }
+    }
+
+    public static class GetHandlerToPeerConnectionManager {
+    }
+
+    @Getter
+    @Setter
+    public static class PeerHandler {
+        private ActorRef handlerRef;
+
+        public PeerHandler(ActorRef handlerRef) {
+            this.handlerRef = handlerRef;
+        }
+    }
+
+    @Getter
+    @Setter
+    public static class Disconnected {
+        private InetSocketAddress remoteAddress;
+
+        public Disconnected(InetSocketAddress remoteAddress) {
+            this.remoteAddress = remoteAddress;
+        }
+    }
 }

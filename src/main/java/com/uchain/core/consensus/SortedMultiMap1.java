@@ -1,20 +1,16 @@
 package com.uchain.core.consensus;
 
+import com.google.common.collect.Lists;
+
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.google.common.collect.Lists;
-
 public class SortedMultiMap1<K, V> {
-	private Map<K, List<V>> container = null;
+	private Map<K, List<V>> container;
 
 	public SortedMultiMap1(String sortType) {
-		if ("reverse".equals(sortType)) {
-			this.container = new TreeMap<K, List<V>>(new MapKeyComparatorReverse<K>());
-		} else {
-			this.container = new TreeMap<K, List<V>>(new MapKeyComparator<K>());
-		}
+	    this.container = new TreeMap(new MapKeyComparator<K>(sortType));
 	}
 
 	public int size() {
@@ -30,21 +26,20 @@ public class SortedMultiMap1<K, V> {
 	}
 
 	public List<V> get(K k) {
-		return container.get(k);
+			return container.get(k);
 	}
 
 	public void put(K k, V v) {
-		if (!container.containsKey(k)) {
-			List<V> list = Lists.newArrayList();
-			list.add(v);
-			container.put(k, list);
-		} else {
-			container.get(k).add(v);
-		}
+			if (!container.containsKey(k)) {
+				container.put(k, Lists.newArrayList());
+			}
+				container.get(k).add(v);
+
 	}
 
 	public List<V> remove(K k) {
-		return container.remove(k);
+        return container.remove(k);
+
 	}
 
 	public TwoTuple<K, V> head() {
@@ -52,6 +47,6 @@ public class SortedMultiMap1<K, V> {
 	}
 
 	public SortedMultiMap1Iterator<K, V> iterator() {
-		return new SortedMultiMap1Iterator<K, V>(container);
+		return new SortedMultiMap1Iterator(container);
 	}
 }

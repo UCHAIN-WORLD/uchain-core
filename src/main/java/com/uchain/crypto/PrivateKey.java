@@ -35,7 +35,7 @@ public class PrivateKey {
             return new PrivateKey(Scalar.apply(data));
         } else if (data.getLength(data.getData()) == 33) {
             if (data.getData().get(data.getData().size() - 1) == 1) {
-                return new PrivateKey(Scalar.apply(new BinaryData(data.getData().subList(0, 33))));
+                return new PrivateKey(Scalar.apply(new BinaryData(data.getData().subList(0, 32))));
             }
         }
         throw new IllegalArgumentException("BinaryData must be initialized with a 32/33 bytes value");
@@ -56,25 +56,42 @@ public class PrivateKey {
     }
 
     public BinaryData toBin() {
-
-        if (isCompressed()) {
+        return getScalar().toBin();
+        /*if (isCompressed()) {
             byte a = 1;
             List<Byte> bt = getScalar().toBin().getData();
             bt.add(a);
             return new BinaryData(bt);
         } else {
             return getScalar().toBin();
-        }
+        }*/
     }
 
     public String toWIF() {
         // always treat as compressed key, do NOT use uncompressed key
         //TODO return Wallet.privKeyToWIF(getScalar().toBin());
-        return "";
+        byte[] data = new byte[34];
+        data[0] = (byte)0x80;
+        data[33] = (byte) 0x01;
+        System.arraycopy(CryptoUtil.binaryData2array(scalar.toBin()), 0, data, 1, 32);
+        return Base58Check.encode(data);
     }
 
-//    @Override
-//    public String toString() {
-//        return toBin().getData().toString();
-//    }
+    public static PrivateKey fromWIF(String wif){
+        byte[] decode;
+        decode = Base58Check.decode(wif);
+        if(decode.length == 34){
+            if(decode[33] == (byte) 0x01){
+                byte[] priv = new byte[32];
+                System.arraycopy(decode, 1, priv, 0, 32);
+                return PrivateKey.apply(CryptoUtil.array2binaryData(priv));
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public String toString() {
+        return toBin().toString();
+    }
 }

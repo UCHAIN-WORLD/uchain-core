@@ -1,10 +1,8 @@
 package com.uchain.core.datastore;
 
-import org.iq80.leveldb.WriteBatch;
-
 import com.uchain.core.datastore.keyvalue.Converter;
+import com.uchain.storage.Batch;
 import com.uchain.storage.LevelDbStorage;
-
 import lombok.val;
 
 abstract class StateStore<T> {
@@ -31,16 +29,16 @@ abstract class StateStore<T> {
 		return cached;
 	}
 
-	public boolean set(T value,WriteBatch writeBatch) {
+	public boolean set(T value, Batch batch) {
     	if (value == null) {
     		return false;
     	}else {
-    		if (writeBatch != null) {
-    			writeBatch.put(prefixBytes, valConverter.toBytes(value));
+    		if (batch != null) {
+                batch.put(prefixBytes, valConverter.toBytes(value));
 		        cached = value;
 		        return true;
 		      } else {
-		        if (db.set(prefixBytes, valConverter.toBytes(value))) {
+		        if (db.set(prefixBytes, valConverter.toBytes(value),null)) {
 		          cached = value;
 		          return true;
 		        } else {
@@ -50,12 +48,8 @@ abstract class StateStore<T> {
     	}
     }
 
-	public void delete(WriteBatch writeBatch) {
-		if (writeBatch != null) {
-			writeBatch.delete(prefixBytes);
-		} else {
-			db.delete(prefixBytes);
-		}
+	public void delete(Batch batch) {
+        db.delete(prefixBytes, batch);
 		cached = null;
 	}
 }

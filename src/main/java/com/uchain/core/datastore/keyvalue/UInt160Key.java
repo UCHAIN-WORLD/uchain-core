@@ -1,14 +1,12 @@
 package com.uchain.core.datastore.keyvalue;
 
+import com.uchain.crypto.UInt160;
+import lombok.val;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-
-import com.uchain.common.Serializabler;
-import com.uchain.crypto.UInt160;
-
-import lombok.val;
 
 public class UInt160Key implements Converter<UInt160>{
 

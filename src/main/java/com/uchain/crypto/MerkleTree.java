@@ -79,6 +79,10 @@ public class MerkleTree {
         }
     }
 
+    public static UInt256 nullRoot(){
+        return UInt256.Zero();
+    }
+
     public MerkleTreeNode getRootNode() {
         return rootNode;
     }

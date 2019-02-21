@@ -1,0 +1,1 @@
+package com.uchain.main;import lombok.AllArgsConstructor;import lombok.Getter;import lombok.Setter;import scala.concurrent.duration.FiniteDuration;@Getter@Setter@AllArgsConstructorpublic class NetworkTimeProviderSettings {    private String server;    private FiniteDuration updateEvery;    private FiniteDuration timeout;}
