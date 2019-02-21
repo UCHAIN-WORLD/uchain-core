@@ -1,6 +1,6 @@
 # UCHAIN
 
-## build command：
+## build command(JDK1.8)：
 * gradle shadowJar
 
 
