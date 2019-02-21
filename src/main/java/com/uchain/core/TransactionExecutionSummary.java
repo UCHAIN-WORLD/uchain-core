@@ -4,9 +4,9 @@ import com.uchain.util.ByteUtil;
 import com.uchain.util.RLP;
 import com.uchain.util.RLPElement;
 import com.uchain.util.RLPList;
-import com.uchain.vm.DataWord;
-import com.uchain.vm.LogInfo;
-import com.uchain.vm.program.InternalTransaction;
+import com.uchain.uvm.DataWord;
+import com.uchain.uvm.LogInfo;
+import com.uchain.uvm.program.InternalTransaction;
 import org.springframework.util.Assert;
 
 import java.math.BigInteger;

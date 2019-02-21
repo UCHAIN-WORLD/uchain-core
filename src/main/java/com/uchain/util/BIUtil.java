@@ -1,10 +1,10 @@
 package com.uchain.util;
 
 
-import com.uchain.crypto.CryptoUtil;
-import com.uchain.crypto.UInt160;
-import com.uchain.crypto.UInt256;
-import com.uchain.vm.Repository;
+import com.uchain.cryptohash.CryptoUtil;
+import com.uchain.cryptohash.UInt160;
+import com.uchain.cryptohash.UInt256;
+import com.uchain.uvm.Repository;
 
 import java.math.BigInteger;
 

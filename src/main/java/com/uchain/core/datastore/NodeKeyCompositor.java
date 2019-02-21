@@ -1,7 +1,7 @@
 package com.uchain.core.datastore;
 
 
-import static com.uchain.crypto.HashUtil.sha3;
+import static com.uchain.cryptohash.HashUtil.sha3;
 import static java.lang.System.arraycopy;
 
 public class NodeKeyCompositor implements Serializer<byte[], byte[]> {

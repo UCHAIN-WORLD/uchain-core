@@ -2,7 +2,7 @@ package com.uchain.common;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.uchain.crypto.*;
+import com.uchain.cryptohash.*;
 import com.uchain.util.Utils;
 import lombok.val;
 

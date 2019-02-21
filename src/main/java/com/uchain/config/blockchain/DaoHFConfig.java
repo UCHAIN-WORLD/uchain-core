@@ -2,7 +2,7 @@ package com.uchain.config.blockchain;
 
 import com.uchain.config.BlockchainConfig;
 import com.uchain.core.Block;
-import com.uchain.vm.Repository;
+import com.uchain.uvm.Repository;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;

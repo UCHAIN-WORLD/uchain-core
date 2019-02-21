@@ -1,13 +1,12 @@
 package com.uchain.core;
 
-import com.uchain.crypto.Crypto;
-import com.uchain.crypto.UInt256;
-import com.uchain.crypto.UIntBase;
+import com.uchain.cryptohash.Crypto;
+import com.uchain.cryptohash.UInt256;
+import com.uchain.cryptohash.UIntBase;
 import lombok.val;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import com.uchain.common.Serializable.*;
 
 public class Asset implements Identifier<UInt256>{
 /*

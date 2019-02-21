@@ -1,15 +1,13 @@
 package com.uchain;
 
-import com.uchain.crypto.BinaryData;
-import com.uchain.crypto.CryptoUtil;
-import com.uchain.crypto.MerkleTree;
-import com.uchain.crypto.UInt256;
+import com.uchain.cryptohash.BinaryData;
+import com.uchain.cryptohash.CryptoUtil;
+import com.uchain.cryptohash.MerkleTree;
+import com.uchain.cryptohash.UInt256;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by Administrator on 2018/8/24.

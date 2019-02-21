@@ -1,10 +1,6 @@
 package com.uchain;
 
-import com.uchain.crypto.Fixed8;
-import lombok.val;
 import org.junit.Test;
-
-import java.math.BigDecimal;
 
 public class AssetTest {
     @Test

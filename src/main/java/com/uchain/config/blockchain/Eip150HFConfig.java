@@ -8,11 +8,11 @@ import com.uchain.core.Transaction;
 import com.uchain.core.datastore.BlockStore;
 import com.uchain.util.Constants;
 import com.uchain.util.Utils;
-import com.uchain.vm.DataWord;
-import com.uchain.vm.GasCost;
-import com.uchain.vm.OpCode;
-import com.uchain.vm.Repository;
-import com.uchain.vm.program.Program;
+import com.uchain.uvm.DataWord;
+import com.uchain.uvm.GasCost;
+import com.uchain.uvm.OpCode;
+import com.uchain.uvm.Repository;
+import com.uchain.uvm.program.Program;
 
 import java.math.BigInteger;
 

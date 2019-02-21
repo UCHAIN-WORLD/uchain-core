@@ -1,0 +1,1 @@
+package com.uchain.core.producerblock;@FunctionalInterfacepublic interface ProduceTaskEnd extends ProduceAsyncTask {    //void endProducep(BlockChain chain);}

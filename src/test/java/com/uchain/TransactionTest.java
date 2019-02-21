@@ -6,14 +6,13 @@ import com.uchain.core.TransactionType;
 import com.uchain.core.consensus.SortedMultiMap2;
 import com.uchain.core.consensus.SortedMultiMap2Iterator;
 import com.uchain.core.consensus.ThreeTuple;
-import com.uchain.crypto.*;
+import com.uchain.cryptohash.*;
 import com.uchain.util.ByteUtil;
 import lombok.val;
 import org.junit.Test;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import static com.uchain.util.TypeConverter.hexToByteArray;
 

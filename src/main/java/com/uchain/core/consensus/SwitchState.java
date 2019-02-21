@@ -2,7 +2,7 @@ package com.uchain.core.consensus;
 
 import com.uchain.common.Serializable;
 import com.uchain.common.Serializabler;
-import com.uchain.crypto.UInt256;
+import com.uchain.cryptohash.UInt256;
 import com.uchain.util.Utils;
 import lombok.Getter;
 import lombok.Setter;

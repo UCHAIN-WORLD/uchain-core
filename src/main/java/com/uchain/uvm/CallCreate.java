@@ -1,0 +1,1 @@
+package com.uchain.uvm;import lombok.AllArgsConstructor;import lombok.Getter;@AllArgsConstructor@Getterpublic class CallCreate {    private byte[] data;    private byte[] destination;    private byte[] gasLimit;    private byte[] value;}

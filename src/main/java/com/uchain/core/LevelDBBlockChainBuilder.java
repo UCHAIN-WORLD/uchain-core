@@ -1,7 +1,7 @@
 package com.uchain.core;
 
 import com.uchain.main.Settings;
-import com.uchain.network.Node;
+import com.uchain.networkmanager.Node;
 
 public class LevelDBBlockChainBuilder {
 

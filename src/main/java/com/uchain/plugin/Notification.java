@@ -1,7 +1,7 @@
 package com.uchain.plugin;
 
 import akka.actor.ActorRef;
-import com.uchain.plugin.notify.NotifyMessage;
+import com.uchain.plugin.notifymessage.NotifyMessage;
 
 import java.util.ArrayList;
 import java.util.List;

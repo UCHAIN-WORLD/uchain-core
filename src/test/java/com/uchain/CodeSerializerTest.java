@@ -1,10 +1,6 @@
 package com.uchain;
 
-import com.google.common.collect.Maps;
 import com.uchain.core.Code;
-import com.uchain.core.Contract;
-import com.uchain.crypto.UInt160;
-import com.uchain.vm.DataWord;
 import lombok.val;
 import org.junit.Test;
 
@@ -12,7 +8,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.util.Map;
 
 public class CodeSerializerTest {
     @Test

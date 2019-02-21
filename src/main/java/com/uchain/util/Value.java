@@ -1,7 +1,7 @@
 package com.uchain.util;
 
 import com.cedarsoftware.util.DeepEquals;
-import com.uchain.crypto.HashUtil;
+import com.uchain.cryptohash.HashUtil;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;

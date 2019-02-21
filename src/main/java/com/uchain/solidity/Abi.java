@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include;
-import static com.uchain.crypto.HashUtil.sha3;
+import static com.uchain.cryptohash.HashUtil.sha3;
 import static com.uchain.solidity.SolidityType.IntType.decodeInt;
 import static com.uchain.solidity.SolidityType.IntType.encodeInt;
 import static java.lang.String.format;

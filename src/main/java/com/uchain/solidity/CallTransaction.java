@@ -9,7 +9,7 @@ import com.uchain.util.ByteUtil;
 import java.io.IOException;
 import java.util.Arrays;
 
-import static com.uchain.crypto.HashUtil.sha3;
+import static com.uchain.cryptohash.HashUtil.sha3;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.ArrayUtils.subarray;
 import static org.apache.commons.lang3.StringUtils.stripEnd;

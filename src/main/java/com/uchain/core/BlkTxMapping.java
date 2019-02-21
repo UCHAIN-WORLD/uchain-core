@@ -8,7 +8,7 @@ import java.util.List;
 
 import com.uchain.common.Serializable;
 import com.uchain.common.Serializabler;
-import com.uchain.crypto.UInt256;
+import com.uchain.cryptohash.UInt256;
 
 import lombok.Getter;
 import lombok.Setter;

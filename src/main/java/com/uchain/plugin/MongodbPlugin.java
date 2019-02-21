@@ -15,7 +15,7 @@ import com.mongodb.reactivestreams.client.*;
 import com.uchain.core.Block;
 import com.uchain.core.Transaction;
 import com.uchain.core.TransactionType;
-import com.uchain.plugin.notify.*;
+import com.uchain.plugin.notifymessage.*;
 import lombok.val;
 
 import static com.uchain.plugin.SubscriberHelpers.*;

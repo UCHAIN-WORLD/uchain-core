@@ -3,7 +3,7 @@ package com.uchain.core.datastore;
 import com.uchain.core.Block;
 import com.uchain.core.BlockHeader;
 import com.uchain.core.datastore.keyvalue.*;
-import com.uchain.crypto.UInt256;
+import com.uchain.cryptohash.UInt256;
 import com.uchain.main.BlockBaseSettings;
 import com.uchain.storage.Batch;
 import com.uchain.storage.ConnFacory;

@@ -2,7 +2,7 @@ package com.uchain.core.datastore;
 
 import com.uchain.core.Block;
 import com.uchain.core.datastore.keyvalue.Converter;
-import com.uchain.crypto.UInt256;
+import com.uchain.cryptohash.UInt256;
 import com.uchain.storage.LevelDbStorage;
 
 public class BlockStore extends StoreBase<UInt256, Block>{

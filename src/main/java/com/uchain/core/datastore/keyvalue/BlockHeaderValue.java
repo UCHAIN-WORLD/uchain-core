@@ -2,10 +2,8 @@ package com.uchain.core.datastore.keyvalue;
 
 import java.io.*;
 
-import com.uchain.common.Serializabler;
 import com.uchain.core.BlockHeader;
 
-import com.uchain.crypto.UInt256;
 import lombok.val;
 
 public class BlockHeaderValue implements Converter<BlockHeader>{

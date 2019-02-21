@@ -3,7 +3,7 @@ package com.uchain.core.datastore;
 import com.uchain.core.TransactionReceipt;
 import com.uchain.core.datastore.keyvalue.TransactionSummaryValue;
 import com.uchain.core.datastore.keyvalue.UInt256Key;
-import com.uchain.crypto.UInt256;
+import com.uchain.cryptohash.UInt256;
 import com.uchain.main.TransactionSummarySettings;
 import com.uchain.storage.Batch;
 import com.uchain.storage.ConnFacory;

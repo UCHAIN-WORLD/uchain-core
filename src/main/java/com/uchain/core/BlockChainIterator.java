@@ -1,6 +1,6 @@
 package com.uchain.core;
 
-import com.uchain.crypto.UInt256;
+import com.uchain.cryptohash.UInt256;
 import lombok.val;
 
 import java.util.Iterator;

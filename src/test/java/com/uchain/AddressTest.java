@@ -1,6 +1,6 @@
 package com.uchain;
 
-import com.uchain.crypto.*;
+import com.uchain.cryptohash.*;
 import lombok.val;
 import lombok.var;
 import org.junit.Test;

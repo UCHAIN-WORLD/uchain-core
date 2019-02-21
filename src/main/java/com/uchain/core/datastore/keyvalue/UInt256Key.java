@@ -1,6 +1,6 @@
 package com.uchain.core.datastore.keyvalue;
 
-import com.uchain.crypto.UInt256;
+import com.uchain.cryptohash.UInt256;
 import lombok.val;
 
 import java.io.ByteArrayInputStream;

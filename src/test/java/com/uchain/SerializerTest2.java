@@ -2,11 +2,9 @@ package com.uchain;
 
 import com.google.common.collect.Maps;
 import com.uchain.common.Serializabler;
-import com.uchain.core.Contract;
-import com.uchain.crypto.Fixed8;
-import com.uchain.crypto.UInt160;
-import com.uchain.crypto.UInt256;
-import com.uchain.vm.DataWord;
+import com.uchain.cryptohash.Fixed8;
+import com.uchain.cryptohash.UInt160;
+import com.uchain.cryptohash.UInt256;
 import lombok.val;
 import org.junit.Test;
 

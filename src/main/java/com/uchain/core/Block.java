@@ -2,9 +2,9 @@ package com.uchain.core;
 
 import com.fasterxml.jackson.annotation.*;
 import com.uchain.common.Serializabler;
-import com.uchain.crypto.MerkleTree;
-import com.uchain.crypto.UInt160;
-import com.uchain.crypto.UInt256;
+import com.uchain.cryptohash.MerkleTree;
+import com.uchain.cryptohash.UInt160;
+import com.uchain.cryptohash.UInt256;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.val;

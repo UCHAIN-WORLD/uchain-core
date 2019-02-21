@@ -1,8 +1,8 @@
 package com.uchain;
 
 import com.uchain.core.consensus.SortedMultiMap1;
-import com.uchain.crypto.Crypto;
-import com.uchain.crypto.UInt256;
+import com.uchain.cryptohash.Crypto;
+import com.uchain.cryptohash.UInt256;
 import org.junit.Test;
 
 import java.io.UnsupportedEncodingException;

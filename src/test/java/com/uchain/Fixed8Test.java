@@ -1,6 +1,6 @@
 package com.uchain;
 
-import com.uchain.crypto.Fixed8;
+import com.uchain.cryptohash.Fixed8;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

@@ -5,18 +5,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.Map;
-
-import com.google.common.collect.Maps;
-import com.uchain.crypto.Fixed8;
-import org.junit.Test;
 
 import com.uchain.common.Serializable;
 import com.uchain.common.Serializabler;
 import com.uchain.core.Account;
-import com.uchain.crypto.Crypto;
-import com.uchain.crypto.UInt160;
-import com.uchain.crypto.UInt256;
+import com.uchain.cryptohash.Crypto;
+import com.uchain.cryptohash.UInt160;
+import com.uchain.cryptohash.UInt256;
 
 import lombok.val;
 

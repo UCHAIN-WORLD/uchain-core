@@ -8,11 +8,11 @@ import com.uchain.common.Serializabler;
 import com.uchain.core.Block;
 import com.uchain.core.LevelDBBlockChain;
 import com.uchain.core.datastore.BlockBase;
-import com.uchain.core.producer.SendRawTransaction;
-import com.uchain.crypto.BinaryData;
-import com.uchain.crypto.CryptoUtil;
-import com.uchain.crypto.UInt256;
-import com.uchain.network.message.BlockMessageImpl;
+import com.uchain.core.producerblock.SendRawTransaction;
+import com.uchain.cryptohash.BinaryData;
+import com.uchain.cryptohash.CryptoUtil;
+import com.uchain.cryptohash.UInt256;
+import com.uchain.networkmanager.message.BlockMessageImpl;
 import lombok.val;
 
 import java.io.IOException;

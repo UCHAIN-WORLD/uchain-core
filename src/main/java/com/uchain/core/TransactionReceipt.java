@@ -1,11 +1,11 @@
 package com.uchain.core;
 
 import com.uchain.common.Serializabler;
-import com.uchain.crypto.PublicKeyHash;
-import com.uchain.crypto.UInt256;
-import com.uchain.crypto.UIntBase;
+import com.uchain.cryptohash.PublicKeyHash;
+import com.uchain.cryptohash.UInt256;
+import com.uchain.cryptohash.UIntBase;
 import com.uchain.util.*;
-import com.uchain.vm.LogInfo;
+import com.uchain.uvm.LogInfo;
 import org.spongycastle.util.BigIntegers;
 
 import java.io.DataOutputStream;

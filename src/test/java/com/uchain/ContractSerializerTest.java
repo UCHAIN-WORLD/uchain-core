@@ -2,8 +2,8 @@ package com.uchain;
 
 import com.google.common.collect.Maps;
 import com.uchain.core.Contract;
-import com.uchain.crypto.UInt160;
-import com.uchain.vm.DataWord;
+import com.uchain.cryptohash.UInt160;
+import com.uchain.uvm.DataWord;
 import lombok.val;
 import org.junit.Test;
 

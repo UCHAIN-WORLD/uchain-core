@@ -1,7 +1,7 @@
 package com.uchain;
 
-import com.uchain.crypto.Fixed8;
-import com.uchain.crypto.UInt160;
+import com.uchain.cryptohash.Fixed8;
+import com.uchain.cryptohash.UInt160;
 import lombok.val;
 import net.sf.json.JSONObject;
 import org.junit.Test;
@@ -11,8 +11,6 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Arrays;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by Administrator on 2018/8/24.

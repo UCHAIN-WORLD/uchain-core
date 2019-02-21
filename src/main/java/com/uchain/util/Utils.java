@@ -1,6 +1,6 @@
 package com.uchain.util;
 
-import com.uchain.vm.DataWord;
+import com.uchain.uvm.DataWord;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

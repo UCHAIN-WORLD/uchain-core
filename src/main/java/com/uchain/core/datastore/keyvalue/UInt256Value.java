@@ -5,8 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 
-import com.uchain.common.Serializabler;
-import com.uchain.crypto.UInt256;
+import com.uchain.cryptohash.UInt256;
 
 import lombok.val;
 

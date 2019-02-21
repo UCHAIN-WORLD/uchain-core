@@ -4,7 +4,7 @@ package com.uchain.config.blockchain;
 import com.uchain.config.BlockchainConfig;
 import com.uchain.config.ConstantsAdapter;
 import com.uchain.util.Constants;
-import com.uchain.vm.GasCost;
+import com.uchain.uvm.GasCost;
 
 
 /**

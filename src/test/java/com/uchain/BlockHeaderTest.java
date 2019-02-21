@@ -6,14 +6,14 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import com.uchain.crypto.PrivateKey;
-import com.uchain.crypto.PublicKey;
+import com.uchain.cryptohash.PrivateKey;
+import com.uchain.cryptohash.PublicKey;
 import org.junit.Test;
 
 import com.uchain.common.Serializabler;
 import com.uchain.core.BlockHeader;
 import com.uchain.core.BlockHeaderJson;
-import com.uchain.crypto.BinaryData;
+import com.uchain.cryptohash.BinaryData;
 
 import akka.http.javadsl.model.DateTime;
 import lombok.val;

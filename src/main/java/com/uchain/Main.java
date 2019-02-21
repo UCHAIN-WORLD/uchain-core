@@ -3,7 +3,7 @@ package com.uchain;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import com.uchain.main.Settings;
-import com.uchain.network.Node;
+import com.uchain.networkmanager.Node;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
