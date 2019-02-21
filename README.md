@@ -1,8 +1,8 @@
 # UCHAIN
 
-## 构建方法：
-* gradle release
+## build command：
+* gradle shadowJar
 
 
-## 运行方法：
-* java -jar build\libs\uchain-1.0-SNAPSHOT.jar
+## run command：
+* java -jar uchain-1.0-SNAPSHOT-all.jar --config ~/config.properties
