@@ -1,7 +1,7 @@
 package com.uchain.config.blockchain;
 
-import com.uchain.core.BlockHeader;
-import com.uchain.core.Transaction;
+import com.uchain.core.block.BlockHeader;
+import com.uchain.core.transaction.Transaction;
 import com.uchain.util.Constants;
 import org.apache.commons.lang3.ArrayUtils;
 

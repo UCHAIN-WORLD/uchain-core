@@ -1,12 +1,12 @@
 package com.uchain.core.datastore;
 
-import com.uchain.core.TransactionReceipt;
+import com.uchain.core.transaction.TransactionReceipt;
 import com.uchain.core.datastore.keyvalue.TransactionSummaryValue;
 import com.uchain.core.datastore.keyvalue.UInt256Key;
 import com.uchain.cryptohash.UInt256;
 import com.uchain.main.TransactionSummarySettings;
 import com.uchain.storage.Batch;
-import com.uchain.storage.ConnFacory;
+import com.uchain.storage.LevelDbConnFacory;
 import com.uchain.storage.LevelDbStorage;
 
 import java.util.List;
@@ -18,7 +18,7 @@ public class TransactionSummaryBase{
 
     public TransactionSummaryBase(TransactionSummarySettings settings) {
         this.settings =  settings;
-        this.db = ConnFacory.getInstance(settings.getDir());
+        this.db = LevelDbConnFacory.getInstance(settings.getDir());
         this.transactionSummaryStore = new TransactionSummaryStore(db,settings.getCacheSize(),
                 DataStoreConstant.TxPrefix,new UInt256Key(),new TransactionSummaryValue());
     }

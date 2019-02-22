@@ -1,7 +1,7 @@
 package com.uchain.uvm.repository;
 
 import com.uchain.core.Account;
-import com.uchain.core.BlockChain;
+import com.uchain.core.block.BlockChain;
 import com.uchain.cryptohash.UInt160;
 import com.uchain.cryptohash.UInt256;
 import com.uchain.uvm.ContractDetails;

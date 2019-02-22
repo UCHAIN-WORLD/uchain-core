@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.uchain.common.Serializabler;
-import com.uchain.core.Block;
+import com.uchain.core.block.Block;
 import com.uchain.core.LevelDBBlockChain;
 import com.uchain.core.datastore.BlockBase;
 import com.uchain.core.producerblock.SendRawTransaction;

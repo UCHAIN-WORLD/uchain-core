@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 import com.uchain.common.Serializable;
 import com.uchain.common.Serializabler;
-import com.uchain.core.BlockHeader;
+import com.uchain.core.block.BlockHeader;
 import com.uchain.cryptohash.UInt256;
 
 import lombok.Getter;

@@ -1,11 +1,11 @@
 package com.uchain.uvm.program;
 
-import com.uchain.core.Transaction;
-import com.uchain.core.TransactionType;
+import com.uchain.core.transaction.Transaction;
+import com.uchain.core.transaction.TransactionType;
 import com.uchain.cryptohash.*;
 import com.uchain.util.ByteUtil;
-import com.uchain.util.RLP;
-import com.uchain.util.RLPList;
+import com.uchain.util.rlp.RLP;
+import com.uchain.util.rlp.RLPList;
 import com.uchain.uvm.DataWord;
 
 import java.nio.ByteBuffer;

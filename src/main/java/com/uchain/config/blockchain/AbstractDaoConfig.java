@@ -1,7 +1,7 @@
 package com.uchain.config.blockchain;
 
 import com.uchain.config.BlockchainConfig;
-import com.uchain.core.Transaction;
+import com.uchain.core.transaction.Transaction;
 import org.spongycastle.util.encoders.Hex;
 
 public abstract class AbstractDaoConfig extends FrontierConfig {

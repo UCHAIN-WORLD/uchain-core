@@ -1,18 +1,18 @@
 package com.uchain.storage;
 
-import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
-
-import java.io.File;
-
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.Options;
 
-public class ConnFacory {
+import java.io.File;
+
+import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
+
+public class LevelDbConnFacory {
     
     
     private static LevelDbStorage levelDbStorage = null;
     
-	private ConnFacory() {
+	private LevelDbConnFacory() {
 	}
  
 	public static LevelDbStorage getInstance(String dbFile) {

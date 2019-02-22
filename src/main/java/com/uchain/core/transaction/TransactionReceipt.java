@@ -1,10 +1,15 @@
-package com.uchain.core;
+package com.uchain.core.transaction;
 
 import com.uchain.common.Serializabler;
+import com.uchain.core.Identifier;
 import com.uchain.cryptohash.PublicKeyHash;
 import com.uchain.cryptohash.UInt256;
 import com.uchain.cryptohash.UIntBase;
-import com.uchain.util.*;
+import com.uchain.util.ByteUtil;
+import com.uchain.util.rlp.RLP;
+import com.uchain.util.rlp.RLPElement;
+import com.uchain.util.rlp.RLPItem;
+import com.uchain.util.rlp.RLPList;
 import com.uchain.uvm.LogInfo;
 import org.spongycastle.util.BigIntegers;
 
@@ -19,7 +24,7 @@ import static com.uchain.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static com.uchain.util.ByteUtil.toHexString;
 import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
 
-public class TransactionReceipt implements Identifier<UInt256>{
+public class TransactionReceipt implements Identifier<UInt256> {
 
     private Transaction transaction;
 

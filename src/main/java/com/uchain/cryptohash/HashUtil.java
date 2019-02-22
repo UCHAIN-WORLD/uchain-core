@@ -1,7 +1,7 @@
 package com.uchain.cryptohash;
 
 import com.uchain.cryptohash.eck.SpongyCastleProvider;
-import com.uchain.util.RLP;
+import com.uchain.util.rlp.RLP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.Digest;

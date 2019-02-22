@@ -1,4 +1,6 @@
-package com.uchain.core.consensus;
+package com.uchain.core.consensus.sorted;
+
+import com.uchain.core.consensus.TwoTuple;
 
 import java.util.Iterator;
 import java.util.List;

@@ -1,7 +1,7 @@
 package com.uchain.core.datastore.keyvalue;
 
 import com.uchain.common.Serializabler;
-import com.uchain.core.TransactionReceipt;
+import com.uchain.core.transaction.TransactionReceipt;
 import lombok.val;
 
 import java.io.*;

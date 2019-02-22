@@ -2,8 +2,10 @@ package com.uchain.core.consensus;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.uchain.core.Block;
+import com.uchain.core.block.Block;
 import com.uchain.core.SwitchResult;
+import com.uchain.core.consensus.sorted.MultiMap;
+import com.uchain.core.consensus.sorted.SortedMultiMap2;
 import com.uchain.core.datastore.DataStoreConstant;
 import com.uchain.core.datastore.ForkItemStore;
 import com.uchain.core.datastore.SwitchStateStore;
@@ -16,7 +18,7 @@ import com.uchain.cryptohash.UInt256;
 import com.uchain.main.Settings;
 import com.uchain.main.Witness;
 import com.uchain.storage.Batch;
-import com.uchain.storage.ConnFacory;
+import com.uchain.storage.LevelDbConnFacory;
 import com.uchain.storage.LevelDbStorage;
 import lombok.Getter;
 import lombok.Setter;
@@ -37,17 +39,17 @@ public class ForkBase {
 	private Settings settings;
 	private ForkItem _head;
 	private LevelDbStorage db;
-	private FuncConfirmed funcConfirmed;
-	private FuncOnSwitch funcOnSwitch;
+	private ConfirmedBlock funcConfirmed;
+	private OnSwitchBlock funcOnSwitch;
 	private Map<UInt256, ForkItem> indexById = new HashMap();
 	private MultiMap<UInt256, UInt256> indexByPrev = new MultiMap();
 	private SortedMultiMap2<Integer,Boolean,UInt256> indexByHeight = new SortedMultiMap2<>("asc","reverse");
 	private SortedMultiMap2<Integer,Integer,UInt256> indexByConfirmedHeight = new SortedMultiMap2<>("reverse","reverse");
 
 
-	public ForkBase(Settings settings, FuncConfirmed funcConfirmed,FuncOnSwitch funcOnSwitch) {
+	public ForkBase(Settings settings, ConfirmedBlock funcConfirmed, OnSwitchBlock funcOnSwitch) {
         this.settings = settings;
-        this.db = ConnFacory.getInstance(settings.getChainSettings().getForkBaseSettings().getDir());
+        this.db = LevelDbConnFacory.getInstance(settings.getChainSettings().getForkBaseSettings().getDir());
         this.forkStore = new ForkItemStore(db,settings.getChainSettings().getForkBaseSettings().getCacheSize(),DataStoreConstant.ForkItemPrefix,new UInt256Key(),new ForkItemValue());
         this.switchStateStore = new SwitchStateStore(db,DataStoreConstant.SwitchStatePrefix,new SwitchStateValue());
 		init();

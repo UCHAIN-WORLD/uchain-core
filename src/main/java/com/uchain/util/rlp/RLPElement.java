@@ -1,4 +1,4 @@
-package com.uchain.util;
+package com.uchain.util.rlp;
 
 import java.io.Serializable;
 

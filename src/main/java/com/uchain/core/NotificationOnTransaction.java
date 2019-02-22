@@ -1,1 +1,1 @@
-package com.uchain.core;@FunctionalInterfacepublic interface NotificationOnTransaction {    void onTransaction(Transaction trx);}
+package com.uchain.core;import com.uchain.core.transaction.Transaction;@FunctionalInterfacepublic interface NotificationOnTransaction {    void onTransaction(Transaction trx);}

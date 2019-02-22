@@ -3,9 +3,9 @@ package com.uchain.config.blockchain;
 
 import com.uchain.config.BlockchainConfig;
 import com.uchain.config.ConstantsAdapter;
-import com.uchain.core.BlockHeader;
+import com.uchain.core.block.BlockHeader;
 import com.uchain.util.Constants;
-import com.uchain.util.EtherUtil;
+import com.uchain.util.MonetaryUtil;
 
 import java.math.BigInteger;
 
@@ -16,7 +16,7 @@ public class ConstantinopleConfig extends ByzantiumConfig {
     public ConstantinopleConfig(BlockchainConfig parent) {
         super(parent);
         constants = new ConstantsAdapter(super.getConstants()) {
-            private final BigInteger BLOCK_REWARD = EtherUtil.convert(2, EtherUtil.Unit.ETHER);
+            private final BigInteger BLOCK_REWARD = MonetaryUtil.convert(2, MonetaryUtil.Unit.ETHER);
 
             @Override
             public BigInteger getBLOCK_REWARD() {

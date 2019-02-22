@@ -2,9 +2,9 @@ package com.uchain.config.blockchain;
 
 import com.uchain.config.BlockchainConfig;
 import com.uchain.config.BlockchainNetConfig;
-import com.uchain.core.Block;
-import com.uchain.core.BlockHeader;
-import com.uchain.core.Transaction;
+import com.uchain.core.block.Block;
+import com.uchain.core.block.BlockHeader;
+import com.uchain.core.transaction.Transaction;
 import com.uchain.core.datastore.BlockStore;
 import com.uchain.util.Constants;
 import com.uchain.util.Utils;

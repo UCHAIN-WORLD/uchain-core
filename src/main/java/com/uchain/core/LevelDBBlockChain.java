@@ -2,10 +2,15 @@ package com.uchain.core;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.uchain.core.block.Block;
+import com.uchain.core.block.BlockChain;
+import com.uchain.core.block.BlockChainIterator;
+import com.uchain.core.block.BlockHeader;
 import com.uchain.core.consensus.*;
 import com.uchain.core.datastore.*;
 import com.uchain.core.datastore.keyvalue.ProducerStatus;
 import com.uchain.core.producerblock.ProducerUtil;
+import com.uchain.core.transaction.*;
 import com.uchain.cryptohash.*;
 import com.uchain.main.Settings;
 import com.uchain.main.Witness;
@@ -79,9 +84,9 @@ public class LevelDBBlockChain implements BlockChain {
         blockBase = new BlockBase(settings.getChainSettings().getBlockBaseSettings());
         dataBase = new DataBase(settings.getChainSettings().getDataBaseSettings());
         transactionReceiptBase = new TransactionSummaryBase(settings.getTransactionSummarySettings());
-        FuncConfirmed funcConfirmed = this::onConfirmed;
+        ConfirmedBlock funcConfirmed = this::onConfirmed;
 
-        FuncOnSwitch funcOnSwitch = this::onSwitch;
+        OnSwitchBlock funcOnSwitch = this::onSwitch;
 
         forkBase = new ForkBase(settings, funcConfirmed, funcOnSwitch);
 
@@ -318,7 +323,7 @@ public class LevelDBBlockChain implements BlockChain {
     }
 
     public void addAllPendingTransactions(long stopProcessTxTime) {
-        TransactionSortedSet ret = new TransactionSortedSet();
+        TransactionSorted ret = new TransactionSorted();
         ret.addAll(unapplyTxs.values());
         Iterator<Transaction> it = ret.iterator();
         while (it.hasNext()) {

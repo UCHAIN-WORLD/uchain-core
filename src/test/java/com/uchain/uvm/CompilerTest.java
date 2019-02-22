@@ -1,9 +1,9 @@
 package com.uchain.uvm;
 //
 
-import com.uchain.core.Transaction;
-import com.uchain.core.TransactionReceipt;
-import com.uchain.core.TransactionType;
+import com.uchain.core.transaction.Transaction;
+import com.uchain.core.transaction.TransactionReceipt;
+import com.uchain.core.transaction.TransactionType;
 import com.uchain.cryptohash.*;
 import com.uchain.solidity.CallTransaction;
 import com.uchain.solidity.compiler.CompilationResult;

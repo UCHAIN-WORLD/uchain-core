@@ -1,9 +1,9 @@
 package com.uchain.uvm;
 
-import com.uchain.util.RLP;
-import com.uchain.util.RLPElement;
-import com.uchain.util.RLPItem;
-import com.uchain.util.RLPList;
+import com.uchain.util.rlp.RLP;
+import com.uchain.util.rlp.RLPElement;
+import com.uchain.util.rlp.RLPItem;
+import com.uchain.util.rlp.RLPList;
 
 import java.util.ArrayList;
 import java.util.List;

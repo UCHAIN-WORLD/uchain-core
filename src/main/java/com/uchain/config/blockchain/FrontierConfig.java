@@ -2,14 +2,14 @@ package com.uchain.config.blockchain;
 
 
 import com.uchain.util.Constants;
-import com.uchain.util.EtherUtil;
+import com.uchain.util.MonetaryUtil;
 
 import java.math.BigInteger;
 
 public class FrontierConfig extends OlympicConfig {
 
     public static class FrontierConstants extends Constants {
-        private static final BigInteger BLOCK_REWARD = EtherUtil.convert(5, EtherUtil.Unit.ETHER);
+        private static final BigInteger BLOCK_REWARD = MonetaryUtil.convert(5, MonetaryUtil.Unit.ETHER);
 
         @Override
         public int getDURATION_LIMIT() {

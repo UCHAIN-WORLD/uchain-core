@@ -1,6 +1,6 @@
 package com.uchain;
 
-import com.uchain.core.BlockHeader;
+import com.uchain.core.block.BlockHeader;
 import com.uchain.core.datastore.DataStoreConstant;
 import com.uchain.core.datastore.HeaderStore;
 import com.uchain.core.datastore.keyvalue.BlockHeaderValue;

@@ -3,9 +3,9 @@ package com.uchain.config.blockchain;
 
 import com.uchain.config.BlockchainConfig;
 import com.uchain.config.ConstantsAdapter;
-import com.uchain.core.BlockHeader;
+import com.uchain.core.block.BlockHeader;
 import com.uchain.util.Constants;
-import com.uchain.util.EtherUtil;
+import com.uchain.util.MonetaryUtil;
 
 import java.math.BigInteger;
 
@@ -17,7 +17,7 @@ public class ByzantiumConfig extends Eip160HFConfig {
     public ByzantiumConfig(BlockchainConfig parent) {
         super(parent);
         constants = new ConstantsAdapter(super.getConstants()) {
-            private final BigInteger BLOCK_REWARD = EtherUtil.convert(3, EtherUtil.Unit.ETHER);
+            private final BigInteger BLOCK_REWARD = MonetaryUtil.convert(3, MonetaryUtil.Unit.ETHER);
 
             @Override
             public BigInteger getBLOCK_REWARD() {

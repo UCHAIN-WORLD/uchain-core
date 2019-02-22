@@ -2,8 +2,8 @@ package com.uchain.uvm.program;
 
 
 import com.uchain.util.ByteUtil;
-import com.uchain.util.RLP;
-import com.uchain.util.RLPList;
+import com.uchain.util.rlp.RLP;
+import com.uchain.util.rlp.RLPList;
 import com.uchain.uvm.OpCode;
 
 import java.util.HashSet;

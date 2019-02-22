@@ -1,5 +1,9 @@
-package com.uchain.util;
+package com.uchain.util.rlp;
 
+import com.uchain.util.ByteArrayWrapper;
+import com.uchain.util.ByteUtil;
+import com.uchain.util.DecodeResult;
+import com.uchain.util.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;

@@ -1,9 +1,9 @@
-package com.uchain.core;
+package com.uchain.core.transaction;
 
 import com.uchain.util.ByteUtil;
-import com.uchain.util.RLP;
-import com.uchain.util.RLPElement;
-import com.uchain.util.RLPList;
+import com.uchain.util.rlp.RLP;
+import com.uchain.util.rlp.RLPElement;
+import com.uchain.util.rlp.RLPList;
 import com.uchain.uvm.DataWord;
 import com.uchain.uvm.LogInfo;
 import com.uchain.uvm.program.InternalTransaction;

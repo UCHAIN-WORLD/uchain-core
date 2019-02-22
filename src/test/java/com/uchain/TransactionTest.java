@@ -1,10 +1,10 @@
 package com.uchain;
 
 import com.uchain.common.Serializabler;
-import com.uchain.core.Transaction;
-import com.uchain.core.TransactionType;
-import com.uchain.core.consensus.SortedMultiMap2;
-import com.uchain.core.consensus.SortedMultiMap2Iterator;
+import com.uchain.core.transaction.Transaction;
+import com.uchain.core.transaction.TransactionType;
+import com.uchain.core.consensus.sorted.SortedMultiMap2;
+import com.uchain.core.consensus.sorted.SortedMultiMap2Iterator;
 import com.uchain.core.consensus.ThreeTuple;
 import com.uchain.cryptohash.*;
 import com.uchain.util.ByteUtil;

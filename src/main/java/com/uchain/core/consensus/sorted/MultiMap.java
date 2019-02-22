@@ -1,4 +1,4 @@
-package com.uchain.core.consensus;
+package com.uchain.core.consensus.sorted;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

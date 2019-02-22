@@ -4,7 +4,7 @@ import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.actor.Scheduler;
-import com.uchain.core.BlockChain;
+import com.uchain.core.block.BlockChain;
 import com.uchain.core.producerblock.ProduceStateImpl.ProducerStopMessage;
 import com.uchain.main.ConsensusSettings;
 import com.uchain.main.Witness;

@@ -1,6 +1,6 @@
 package com.uchain;
 
-import com.uchain.core.consensus.SortedMultiMap2;
+import com.uchain.core.consensus.sorted.SortedMultiMap2;
 import com.uchain.cryptohash.Crypto;
 import com.uchain.cryptohash.UInt256;
 import lombok.val;

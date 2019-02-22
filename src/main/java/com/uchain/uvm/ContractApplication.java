@@ -1,6 +1,9 @@
 package com.uchain.uvm;
 
-import com.uchain.core.*;
+import com.uchain.core.block.BlockChain;
+import com.uchain.core.transaction.Transaction;
+import com.uchain.core.transaction.TransactionExecutor;
+import com.uchain.core.transaction.TransactionReceipt;
 
 public class ContractApplication {
 

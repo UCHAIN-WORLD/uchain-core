@@ -1,7 +1,7 @@
 package com.uchain.uvm.program;
 
 import com.uchain.core.Account;
-import com.uchain.core.Transaction;
+import com.uchain.core.transaction.Transaction;
 import com.uchain.core.datastore.Source;
 import com.uchain.cryptohash.HashUtil;
 import com.uchain.cryptohash.UInt160;

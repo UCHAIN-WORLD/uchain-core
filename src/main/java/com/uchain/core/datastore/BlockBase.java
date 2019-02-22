@@ -1,12 +1,12 @@
 package com.uchain.core.datastore;
 
-import com.uchain.core.Block;
-import com.uchain.core.BlockHeader;
+import com.uchain.core.block.Block;
+import com.uchain.core.block.BlockHeader;
 import com.uchain.core.datastore.keyvalue.*;
 import com.uchain.cryptohash.UInt256;
 import com.uchain.main.BlockBaseSettings;
 import com.uchain.storage.Batch;
-import com.uchain.storage.ConnFacory;
+import com.uchain.storage.LevelDbConnFacory;
 import com.uchain.storage.LevelDbStorage;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,7 +26,7 @@ public class BlockBase{
 
     public BlockBase(BlockBaseSettings settings){
         this.settings = settings;
-        this.db = ConnFacory.getInstance(settings.getDir());
+        this.db = LevelDbConnFacory.getInstance(settings.getDir());
         this.blockStore = new BlockStore(db, settings.getCacheSize(),DataStoreConstant.BlockPrefix, new UInt256Key(),
                 new BlockValue());
         this.headBlkStore = new HeadBlockStore(db, DataStoreConstant.HeadBlockStatePrefix,

@@ -1,1 +1,1 @@
-package com.uchain.core;@FunctionalInterfacepublic interface NotificationOnBlock {    void onBlock(Block block);}
+package com.uchain.core;import com.uchain.core.block.Block;@FunctionalInterfacepublic interface NotificationOnBlock {    void onBlock(Block block);}

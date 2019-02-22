@@ -16,7 +16,7 @@ public class Constants {
 
     private static final int BEST_NUMBER_DIFF_LIMIT = 100;
 
-    private static final BigInteger BLOCK_REWARD = EtherUtil.convert(1500, EtherUtil.Unit.FINNEY);  // 1.5 ETH
+    private static final BigInteger BLOCK_REWARD = MonetaryUtil.convert(1500, MonetaryUtil.Unit.FINNEY);  // 1.5 ETH
 
     private static final BigInteger SECP256K1N = new BigInteger("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16);
 

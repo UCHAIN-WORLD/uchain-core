@@ -1,0 +1,1 @@
+package com.uchain.core.consensus;import com.uchain.core.SwitchResult;import java.util.List;@FunctionalInterfacepublic interface OnSwitchBlock {    SwitchResult onSwitch(List<ForkItem> from, List<ForkItem> to, SwitchState switchState);}

@@ -1,4 +1,4 @@
-package com.uchain.core;
+package com.uchain.core.transaction;
 
 public enum TransactionType {
 	Miner(0x00),Transfer(0x01),Fee(0x02),RegisterName(0x03),Genesis(0x04),Contract(0x05),Estimate_ContractConsumer(0x06);

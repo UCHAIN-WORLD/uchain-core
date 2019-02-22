@@ -1,7 +1,9 @@
-package com.uchain.core;
+package com.uchain.core.block;
 
 import com.fasterxml.jackson.annotation.*;
 import com.uchain.common.Serializabler;
+import com.uchain.core.Identifier;
+import com.uchain.core.transaction.Transaction;
 import com.uchain.cryptohash.MerkleTree;
 import com.uchain.cryptohash.UInt160;
 import com.uchain.cryptohash.UInt256;
@@ -24,7 +26,7 @@ import java.util.stream.Collectors;
 
 @Setter
 @Getter
-public class Block implements Identifier<UInt160>{
+public class Block implements Identifier<UInt160> {
     private BlockHeader header;
     private List<Transaction> transactions =new ArrayList<>();
     @JsonIgnore

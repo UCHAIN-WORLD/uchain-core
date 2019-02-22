@@ -1,4 +1,4 @@
-package com.uchain.core;
+package com.uchain.core.transaction;
 
 import lombok.Getter;
 import lombok.Setter;

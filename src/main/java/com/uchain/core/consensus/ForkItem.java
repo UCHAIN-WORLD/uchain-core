@@ -3,7 +3,7 @@ package com.uchain.core.consensus;
 import com.google.common.collect.Maps;
 import com.uchain.common.Serializable;
 import com.uchain.common.Serializabler;
-import com.uchain.core.Block;
+import com.uchain.core.block.Block;
 import com.uchain.cryptohash.CryptoUtil;
 import com.uchain.cryptohash.PublicKey;
 import com.uchain.cryptohash.UInt256;

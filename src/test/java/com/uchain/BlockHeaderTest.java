@@ -11,8 +11,8 @@ import com.uchain.cryptohash.PublicKey;
 import org.junit.Test;
 
 import com.uchain.common.Serializabler;
-import com.uchain.core.BlockHeader;
-import com.uchain.core.BlockHeaderJson;
+import com.uchain.core.block.BlockHeader;
+import com.uchain.core.block.BlockHeaderJson;
 import com.uchain.cryptohash.BinaryData;
 
 import akka.http.javadsl.model.DateTime;

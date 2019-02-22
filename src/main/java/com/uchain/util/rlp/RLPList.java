@@ -1,4 +1,6 @@
-package com.uchain.util;
+package com.uchain.util.rlp;
+
+import com.uchain.util.ByteUtil;
 
 import java.util.ArrayList;
 

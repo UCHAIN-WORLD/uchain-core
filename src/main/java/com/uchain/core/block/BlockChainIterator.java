@@ -1,5 +1,7 @@
-package com.uchain.core;
+package com.uchain.core.block;
 
+import com.uchain.core.block.Block;
+import com.uchain.core.block.BlockChain;
 import com.uchain.cryptohash.UInt256;
 import lombok.val;
 

@@ -1,6 +1,6 @@
 package com.uchain.plugin.notifymessage;
 
-import com.uchain.core.Transaction;
+import com.uchain.core.transaction.Transaction;
 import lombok.Getter;
 import lombok.Setter;
 

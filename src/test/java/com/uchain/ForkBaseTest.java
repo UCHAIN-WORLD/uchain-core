@@ -1,13 +1,13 @@
 package com.uchain;
 
-import com.uchain.core.Block;
-import com.uchain.core.BlockHeader;
+import com.uchain.core.block.Block;
+import com.uchain.core.block.BlockHeader;
 import com.uchain.core.SwitchResult;
-import com.uchain.core.Transaction;
+import com.uchain.core.transaction.Transaction;
 import com.uchain.core.consensus.ForkBase;
 import com.uchain.core.consensus.ForkItem;
-import com.uchain.core.consensus.FuncConfirmed;
-import com.uchain.core.consensus.FuncOnSwitch;
+import com.uchain.core.consensus.ConfirmedBlock;
+import com.uchain.core.consensus.OnSwitchBlock;
 import com.uchain.cryptohash.BinaryData;
 import com.uchain.cryptohash.PrivateKey;
 import com.uchain.cryptohash.PublicKey;
@@ -356,8 +356,8 @@ public class ForkBaseTest {
         settings.getChainSettings().getForkBaseSettings().setDir(dir);
         settings.getConsensusSettings().setWitnessList(witnesses);
 
-        FuncConfirmed funcConfirmed = block -> System.out.println("confirm block "+block.height());
-        FuncOnSwitch funcOnSwitch;
+        ConfirmedBlock funcConfirmed = block -> System.out.println("confirm block "+block.height());
+        OnSwitchBlock funcOnSwitch;
 
         funcOnSwitch = (a, b,c) -> {
             if(flag) {

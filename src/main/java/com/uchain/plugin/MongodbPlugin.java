@@ -12,9 +12,9 @@ import static com.mongodb.client.model.Filters.*;
 import static com.mongodb.client.model.Updates.inc;
 import static com.mongodb.client.model.Updates.set;
 import com.mongodb.reactivestreams.client.*;
-import com.uchain.core.Block;
-import com.uchain.core.Transaction;
-import com.uchain.core.TransactionType;
+import com.uchain.core.block.Block;
+import com.uchain.core.transaction.Transaction;
+import com.uchain.core.transaction.TransactionType;
 import com.uchain.plugin.notifymessage.*;
 import lombok.val;
 

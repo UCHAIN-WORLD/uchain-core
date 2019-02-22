@@ -1,7 +1,7 @@
 package com.uchain.uvm.program.invoke;
 
-import com.uchain.core.Block;
-import com.uchain.core.Transaction;
+import com.uchain.core.block.Block;
+import com.uchain.core.transaction.Transaction;
 import com.uchain.core.datastore.BlockStore;
 import com.uchain.cryptohash.UInt160;
 import com.uchain.uvm.DataWord;

@@ -2,8 +2,7 @@ package com.uchain.core.datastore.keyvalue;
 
 import java.io.*;
 
-import com.uchain.common.Serializabler;
-import com.uchain.core.Transaction;
+import com.uchain.core.transaction.Transaction;
 
 import lombok.val;
 

@@ -2,7 +2,7 @@ package com.uchain.util;
 
 import java.math.BigInteger;
 
-public class EtherUtil {
+public class MonetaryUtil {
     public enum Unit {
         WEI(BigInteger.valueOf(1)),
         GWEI(BigInteger.valueOf(1_000_000_000)),

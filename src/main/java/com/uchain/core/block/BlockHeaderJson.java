@@ -1,4 +1,4 @@
-package com.uchain.core;
+package com.uchain.core.block;
 
 import lombok.Getter;
 import lombok.Setter;

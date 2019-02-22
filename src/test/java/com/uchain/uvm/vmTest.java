@@ -1,6 +1,6 @@
 package com.uchain.uvm;
 
-import com.uchain.core.Transaction;
+import com.uchain.core.transaction.Transaction;
 import com.uchain.main.SystemProperties;
 import com.uchain.uvm.hook.VMHook;
 import com.uchain.uvm.program.Program;

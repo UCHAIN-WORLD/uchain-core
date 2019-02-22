@@ -1,16 +1,5 @@
 package com.uchain;
 
-import com.uchain.core.BlockHeader;
-import com.uchain.core.LevelDBBlockChain;
-import com.uchain.core.LevelDBBlockChainBuilder;
-import com.uchain.main.Settings;
-import com.uchain.storage.ConnFacory;
-import com.uchain.storage.LevelDbStorage;
-import lombok.val;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 public class BlockChainTest {
 
 //    static LevelDbStorage storage;

@@ -1,17 +1,16 @@
 package com.uchain.core;
 
+import com.uchain.common.Serializable;
+import com.uchain.common.Serializabler;
+import com.uchain.cryptohash.UInt256;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.uchain.common.Serializable;
-import com.uchain.common.Serializabler;
-import com.uchain.cryptohash.UInt256;
-
-import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 @Setter

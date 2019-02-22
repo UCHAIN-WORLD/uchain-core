@@ -1,7 +1,7 @@
 package com.uchain.networkmanager.message;
 
 import com.uchain.common.Serializabler;
-import com.uchain.core.Block;
+import com.uchain.core.block.Block;
 import com.uchain.core.producerblock.SendRawTransaction;
 import com.uchain.cryptohash.UInt160;
 import com.uchain.cryptohash.UInt256;

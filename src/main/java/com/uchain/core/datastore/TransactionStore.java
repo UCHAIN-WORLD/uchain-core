@@ -1,6 +1,6 @@
 package com.uchain.core.datastore;
 
-import com.uchain.core.Transaction;
+import com.uchain.core.transaction.Transaction;
 import com.uchain.core.datastore.keyvalue.Converter;
 import com.uchain.cryptohash.UInt256;
 import com.uchain.storage.LevelDbStorage;

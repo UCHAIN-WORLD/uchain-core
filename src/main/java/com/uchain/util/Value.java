@@ -2,6 +2,7 @@ package com.uchain.util;
 
 import com.cedarsoftware.util.DeepEquals;
 import com.uchain.cryptohash.HashUtil;
+import com.uchain.util.rlp.RLP;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;

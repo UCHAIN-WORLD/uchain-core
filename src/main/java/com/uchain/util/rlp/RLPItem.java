@@ -1,4 +1,4 @@
-package com.uchain.util;
+package com.uchain.util.rlp;
 
 public class RLPItem implements RLPElement {
 

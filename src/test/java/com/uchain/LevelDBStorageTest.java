@@ -18,7 +18,7 @@ public class LevelDBStorageTest {
 
 	@BeforeClass
 	public static void setUp(){
-		storage = ConnFacory.getInstance("test_net/fork");
+		storage = LevelDbConnFacory.getInstance("test_net/fork");
 	}
 
 	@AfterClass

@@ -1,8 +1,12 @@
-package com.uchain.core;
+package com.uchain.core.transaction;
 
 import com.uchain.config.BlockchainConfig;
 import com.uchain.config.SystemPropertiesConfig;
 
+import com.uchain.core.Account;
+import com.uchain.core.block.Block;
+import com.uchain.core.block.BlockChain;
+import com.uchain.core.LevelDBBlockChain;
 import com.uchain.core.datastore.BlockStore;
 import com.uchain.cryptohash.CryptoUtil;
 
@@ -73,7 +77,7 @@ public class TransactionExecutor {
     private final VMHook vmHook;
     private long stopProcessTxTime;
 
-    public TransactionExecutor(Transaction tx, BlockChain chain, Repository track,long stopProcessTxTime) {
+    public TransactionExecutor(Transaction tx, BlockChain chain, Repository track, long stopProcessTxTime) {
         this(tx, chain, track, 0,stopProcessTxTime);
     }
 

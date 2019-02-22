@@ -1,11 +1,14 @@
-package com.uchain.core.consensus;
+package com.uchain.core.consensus.sorted;
+
+import com.uchain.core.consensus.MapKeyComparator;
+import com.uchain.core.consensus.ThreeTuple;
 
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 public class SortedMultiMap2<K1,K2,V> implements Iterable<Object>{
-    private Map<K1,SortedMultiMap1<K2,V>> container;
+    private Map<K1, SortedMultiMap1<K2,V>> container;
     private String sortedMultiMap1SortType;
     public SortedMultiMap2(String sortType,String sortedMultiMap1SortType) {
         this.container = new TreeMap(new MapKeyComparator<K1>(sortType));

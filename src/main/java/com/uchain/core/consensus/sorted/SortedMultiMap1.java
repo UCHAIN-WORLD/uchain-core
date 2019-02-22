@@ -1,6 +1,8 @@
-package com.uchain.core.consensus;
+package com.uchain.core.consensus.sorted;
 
 import com.google.common.collect.Lists;
+import com.uchain.core.consensus.MapKeyComparator;
+import com.uchain.core.consensus.TwoTuple;
 
 import java.util.List;
 import java.util.Map;

@@ -2,7 +2,7 @@ package com.uchain.core.datastore.keyvalue;
 
 import java.io.*;
 
-import com.uchain.core.BlockHeader;
+import com.uchain.core.block.BlockHeader;
 
 import lombok.val;
 

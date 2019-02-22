@@ -1,4 +1,4 @@
-package com.uchain.core.consensus;
+package com.uchain.core.consensus.sorted;
 
 import java.util.Iterator;
 import java.util.List;

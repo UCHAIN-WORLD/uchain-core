@@ -1,5 +1,9 @@
-package com.uchain.core;
+package com.uchain.core.block;
 
+import com.uchain.core.Account;
+import com.uchain.core.ChainInfo;
+import com.uchain.core.transaction.Transaction;
+import com.uchain.core.transaction.TransactionReceipt;
 import com.uchain.cryptohash.UInt160;
 import com.uchain.cryptohash.UInt256;
 import com.uchain.main.Witness;

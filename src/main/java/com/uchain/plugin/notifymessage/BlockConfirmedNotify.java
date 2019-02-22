@@ -1,6 +1,6 @@
 package com.uchain.plugin.notifymessage;
 
-import com.uchain.core.Block;
+import com.uchain.core.block.Block;
 import lombok.Getter;
 import lombok.Setter;
 

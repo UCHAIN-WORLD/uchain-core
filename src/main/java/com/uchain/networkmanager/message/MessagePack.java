@@ -1,7 +1,7 @@
 package com.uchain.networkmanager.message;
 
 import akka.util.ByteString;
-import com.uchain.core.Block;
+import com.uchain.core.block.Block;
 import com.uchain.networkmanager.message.BlockMessageImpl.*;
 import lombok.Getter;
 import lombok.Setter;

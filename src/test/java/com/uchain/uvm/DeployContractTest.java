@@ -1,7 +1,13 @@
 package com.uchain.uvm;
 
 import com.uchain.core.*;
+import com.uchain.core.block.Block;
+import com.uchain.core.block.BlockChain;
+import com.uchain.core.block.BlockHeader;
 import com.uchain.core.producerblock.ProducerUtil;
+import com.uchain.core.transaction.Transaction;
+import com.uchain.core.transaction.TransactionReceipt;
+import com.uchain.core.transaction.TransactionType;
 import com.uchain.cryptohash.*;
 import com.uchain.main.*;
 import com.uchain.networkmanager.Node;

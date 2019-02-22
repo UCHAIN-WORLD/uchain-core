@@ -1,6 +1,6 @@
 package com.uchain.core.datastore.keyvalue;
 
-import com.uchain.core.Block;
+import com.uchain.core.block.Block;
 import lombok.val;
 
 import java.io.*;
